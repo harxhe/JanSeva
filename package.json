@@ -1,0 +1,30 @@
+﻿{
+  "name": "janseva",
+  "version": "1.0.0",
+  "description": "JanSeva monorepo",
+  "private": true,
+  "scripts": {
+    "dev:backend": "npm run dev --workspace backend",
+    "start:backend": "npm run start --workspace backend",
+    "dev:frontend": "npm run dev --workspace frontend",
+    "build:frontend": "npm run build --workspace frontend",
+    "preview:frontend": "npm run preview --workspace frontend"
+  },
+  "workspaces": [
+    "frontend",
+    "backend",
+    "ai"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/activateLabhesh/Janseva.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/activateLabhesh/Janseva/issues"
+  },
+  "homepage": "https://github.com/activateLabhesh/Janseva#readme"
+}

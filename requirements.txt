@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+requests
+python-dotenv
+ffmpeg-python
+langchain-groq
+langchain-core
+groq

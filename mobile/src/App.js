@@ -5,8 +5,7 @@ import { mockHistory } from "./data/mockData";
 import SignInScreen from "./screens/SignInScreen";
 import HomeScreen from "./screens/HomeScreen";
 import TextComplaintScreen from "./screens/TextComplaintScreen";
-import VoiceAgentScreen from "./screens/VoiceAgentScreen";
-import ChatBotScreen from "./screens/ChatBotScreen";
+import VoiceComplaintScreen from "./screens/VoiceComplaintScreen";
 import HistoryScreen from "./screens/HistoryScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 
@@ -59,9 +58,7 @@ const App = () => {
       case "text":
         return <TextComplaintScreen onBack={() => setScreen("home")} onSubmit={handleSubmit} />;
       case "voice":
-        return <VoiceAgentScreen onBack={() => setScreen("home")} onSubmit={handleSubmit} />;
-      case "chat":
-        return <ChatBotScreen onBack={() => setScreen("home")} />;
+        return <VoiceComplaintScreen onBack={() => setScreen("home")} onSubmit={handleSubmit} />;
       case "history":
         return <HistoryScreen onBack={() => setScreen("home")} history={history} />;
       case "settings":

@@ -3,28 +3,22 @@ import AppLayout from "./layouts/AppLayout";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Complaints from "./pages/Complaints";
-import Analytics from "./pages/Analytics";
-import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { stats, complaints, activity, channels, currentUser } from "./data/mockData";
 
 const pageMap = {
   dashboard: Dashboard,
   complaints: Complaints,
-  analytics: Analytics,
-  settings: Settings,
 };
 
 const navItems = [
   { id: "dashboard", label: "Command Center" },
-  { id: "complaints", label: "Complaints + Evidence" },
-  { id: "analytics", label: "AI Insights" },
-  { id: "settings", label: "Settings" },
+  { id: "complaints", label: "Complaints" },
 ];
 
 const accessRules = {
-  admin: ["dashboard", "complaints", "analytics", "settings"],
-  manager: ["dashboard", "complaints", "analytics"],
+  admin: ["dashboard", "complaints"],
+  manager: ["dashboard", "complaints"],
   responder: ["dashboard", "complaints"],
 };
 

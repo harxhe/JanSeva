@@ -29,13 +29,6 @@ class ListenerAgent:
 
         transcription = self.client.audio.transcriptions.create(**params)
             
-        # Groq returns a Transcription object.
-        # Note: Depending on library version, attributes might be dicts or objects.
-        # We'll use safe handling.
-        
-        # Verbose JSON structure:
-        # { "text": "...", "language": "en", "segments": [ ... ] }
-        
         text = getattr(transcription, 'text', "")
         language = getattr(transcription, 'language', "auto")
         

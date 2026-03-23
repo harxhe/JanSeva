@@ -5,7 +5,7 @@ const Sidebar = ({ activeId, onChange, navItems, user }) => {
         <p className="text-xs uppercase tracking-[0.3em] text-white/60">Samadhan</p>
         <h1 className="mt-2 text-2xl font-semibold">Civic Command Hub</h1>
         <p className="mt-2 text-sm text-white/70">
-          Unified dashboard for SMS and IVR complaints.
+          Dashboard for Civic Complaints.
         </p>
       </div>
       <nav className="flex-1 space-y-2">
@@ -24,11 +24,7 @@ const Sidebar = ({ activeId, onChange, navItems, user }) => {
           </button>
         ))}
       </nav>
-      <div className="rounded-2xl bg-white/10 p-4 text-sm">
-        <p className="text-white/70">Live SLA Watch</p>
-        <p className="mt-2 text-2xl font-semibold">18 overdue</p>
-        <p className="mt-2 text-white/60">Auto reminders sent every 2 hrs.</p>
-      </div>
+
       <div className="rounded-2xl bg-white/10 p-4 text-sm">
         <p className="text-white/70">Profile</p>
         <p className="mt-2 text-base font-semibold">{user.name}</p>

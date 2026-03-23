@@ -353,7 +353,7 @@ const getComplaintById = async (req, res, next) => {
       throw complaintError;
     }
 
-    const [mediaResult, eventResult, aiResult, assignmentResult] = await Promise.all([
+    const [mediaResult, eventResult, aiResult] = await Promise.all([
       supabaseAdmin
         .from("complaint_media")
         .select(
@@ -372,16 +372,7 @@ const getComplaintById = async (req, res, next) => {
           "id, transcript_text, transcript_confidence, classification_label, classification_confidence, model_name, overridden_by_human, created_at"
         )
         .eq("complaint_id", complaint.id)
-        .order("created_at", { ascending: false }),
-      supabaseAdmin
-        .from("assignments")
-        .select(
-          "id, assigned_to_id, assigned_to_type, assigned_by_id, due_at, is_active, created_at, updated_at"
-        )
-        .eq("complaint_id", complaint.id)
-        .eq("is_active", true)
         .order("created_at", { ascending: false })
-        .limit(1),
     ]);
 
     if (mediaResult.error) {
@@ -393,9 +384,6 @@ const getComplaintById = async (req, res, next) => {
     if (aiResult.error) {
       throw aiResult.error;
     }
-    if (assignmentResult.error) {
-      throw assignmentResult.error;
-    }
 
     res.status(200).json({
       success: true,
@@ -404,7 +392,6 @@ const getComplaintById = async (req, res, next) => {
         media: mediaResult.data || [],
         events: eventResult.data || [],
         ai_outputs: aiResult.data || [],
-        active_assignment: assignmentResult.data?.[0] || null,
       },
     });
   } catch (error) {

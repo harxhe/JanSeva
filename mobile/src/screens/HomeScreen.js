@@ -37,28 +37,23 @@ const HomeScreen = ({ user, onNavigate, latestStatus }) => {
       <Text style={styles.sectionLabel}>Quick actions</Text>
       <View style={styles.tileRow}>
         <ActionTile
-          title="Talk to Agent"
-          description="Voice call with AI agent and auto-summary."
-          tone="accent"
-          onPress={() => onNavigate("voice")}
-        />
-        <ActionTile
-          title="Text Complaint"
-          description="Send a detailed text with category and photo."
+          title="Complaint via Text"
+          description="Type out your civic issue."
           tone="primary"
           onPress={() => onNavigate("text")}
+        />
+        <ActionTile
+          title="Complaint via Voice"
+          description="Record a voice note."
+          tone="accent"
+          onPress={() => onNavigate("voice")}
         />
       </View>
       <View style={styles.tileRow}>
         <ActionTile
-          title="Chatbot"
-          description="Chat with Samadhan AI for quick help."
-          tone="warning"
-          onPress={() => onNavigate("chat")}
-        />
-        <ActionTile
-          title="History"
+          title="My Complaints"
           description="Track and review all your submitted issues."
+          tone="warning"
           onPress={() => onNavigate("history")}
         />
       </View>

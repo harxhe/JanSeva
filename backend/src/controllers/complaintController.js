@@ -254,7 +254,7 @@ const listComplaints = async (req, res, next) => {
     let query = supabaseAdmin
       .from("complaints")
       .select(
-        "id, complaint_number, status, channel, priority, category, location_text, ward_id, department_id, created_at, updated_at, citizens(phone_number, name)",
+        "id, complaint_number, status, channel, priority, category, raw_text, created_at, updated_at, citizens(phone_number, name)",
         { count: "exact" }
       )
       .order("created_at", { ascending: false })
@@ -269,12 +269,7 @@ const listComplaints = async (req, res, next) => {
     if (isNonEmptyString(channel)) {
       query = query.eq("channel", channel.trim());
     }
-    if (isNonEmptyString(ward_id)) {
-      query = query.eq("ward_id", ward_id.trim());
-    }
-    if (isNonEmptyString(department_id)) {
-      query = query.eq("department_id", department_id.trim());
-    }
+
     if (isNonEmptyString(start_date)) {
       query = query.gte("created_at", start_date.trim());
     }
@@ -284,7 +279,7 @@ const listComplaints = async (req, res, next) => {
     if (isNonEmptyString(search)) {
       const term = search.trim().replaceAll(",", " ");
       query = query.or(
-        `raw_text.ilike.%${term}%,location_text.ilike.%${term}%,category.ilike.%${term}%`
+        `raw_text.ilike.%${term}%,category.ilike.%${term}%`
       );
     }
 

@@ -1,4 +1,4 @@
-const Sidebar = ({ activeId, onChange, navItems, user }) => {
+const Sidebar = ({ activeId, onChange, navItems}) => {
   return (
     <aside className="flex h-full flex-col gap-6 rounded-3xl bg-ink-900/95 p-6 text-white shadow-soft">
       <div>
@@ -25,25 +25,6 @@ const Sidebar = ({ activeId, onChange, navItems, user }) => {
         ))}
       </nav>
 
-      <div className="rounded-2xl bg-white/10 p-4 text-sm">
-        <p className="text-white/70">Profile</p>
-        <p className="mt-2 text-base font-semibold">{user.name}</p>
-        <p className="text-xs text-white/60">@{user.username}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-          <span className="rounded-full bg-white/15 px-3 py-1">
-            Role: {user.role}
-          </span>
-          <span
-            className={`rounded-full px-3 py-1 ${
-              user.googleConnected
-                ? "bg-jade-400/20 text-jade-400"
-                : "bg-sun-400/20 text-sun-400"
-            }`}
-          >
-            Google {user.googleConnected ? "Connected" : "Not linked"}
-          </span>
-        </div>
-      </div>
     </aside>
   );
 };

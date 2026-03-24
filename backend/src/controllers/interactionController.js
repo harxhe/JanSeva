@@ -32,11 +32,6 @@ const createChatInteraction = async (req, res, next) => {
         raw_text: text,
         category: category,
         priority: body.priority || "medium",
-        location_text: body.location_text,
-        latitude: body.latitude,
-        longitude: body.longitude,
-        ward_id: body.ward_id,
-        department_id: body.department_id,
         media: Array.isArray(body.media) ? body.media : [],
       },
       {
@@ -49,7 +44,6 @@ const createChatInteraction = async (req, res, next) => {
         await supabaseAdmin.from("ai_outputs").insert({
             complaint_id: complaint.id,
             classification_label: category,
-            classification_confidence: classificationConfidence,
             model_name: "v0.5-classifier"
         });
     }

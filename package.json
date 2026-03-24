@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "janseva",
   "version": "1.0.0",
   "description": "JanSeva monorepo",
@@ -8,7 +8,10 @@
     "start:backend": "npm run start --workspace backend",
     "dev:frontend": "npm run dev --workspace frontend",
     "build:frontend": "npm run build --workspace frontend",
-    "preview:frontend": "npm run preview --workspace frontend"
+    "preview:frontend": "npm run preview --workspace frontend",
+    "dev:ai": "cd ai && .venv\\Scripts\\python.exe -m uvicorn app.main:app --port 8000 --reload",
+    "dev:servers": "concurrently \"npm run dev:backend\" \"npm run dev:ai\"",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:ai\""
   },
   "workspaces": [
     "frontend",
@@ -26,5 +29,8 @@
   "bugs": {
     "url": "https://github.com/activateLabhesh/Janseva/issues"
   },
-  "homepage": "https://github.com/activateLabhesh/Janseva#readme"
+  "homepage": "https://github.com/activateLabhesh/Janseva#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }

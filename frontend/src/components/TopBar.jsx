@@ -9,7 +9,7 @@ const TopBar = ({ role, onRoleChange }) => {
           Citizen Issue Control
         </h2>
         <p className="mt-2 text-sm text-ink-600">
-          Real-time triage for SMS and IVR complaints.
+          Real-time triage for citizen app complaints.
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-3">

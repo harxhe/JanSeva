@@ -1,9 +1,9 @@
 const { supabaseAdmin } = require("../client/supabase");
 const eventBus = require("../realtime/eventBus");
 
-const VALID_CHANNELS = new Set(["sms", "whatsapp", "voice"]);
+const VALID_CHANNELS = new Set(["sms", "whatsapp", "voice", "app"]);
 const VALID_PRIORITIES = new Set(["low", "medium", "high", "critical"]);
-const VALID_MEDIA_TYPES = new Set(["audio", "image"]);
+const VALID_MEDIA_TYPES = new Set(["audio", "image", "video"]);
 const VALID_STATUSES = new Set([
   "received",
   "ai_classified",
@@ -65,7 +65,7 @@ const validateCreatePayload = (payload = {}) => {
   }
 
   if (!VALID_CHANNELS.has(channel)) {
-    throw createHttpError(400, "channel must be sms, whatsapp, or voice");
+    throw createHttpError(400, "channel must be sms, whatsapp, voice, or app");
   }
 
   if (!VALID_PRIORITIES.has(priority)) {
@@ -123,10 +123,6 @@ const createComplaintRecord = async (payload, options = {}) => {
     citizenPayload.name = payload.name.trim();
   }
 
-  if (isNonEmptyString(payload.preferred_language)) {
-    citizenPayload.preferred_language = payload.preferred_language.trim();
-  }
-
   const { data: citizen, error: citizenError } = await supabaseAdmin
     .from("citizens")
     .upsert(citizenPayload, { onConflict: "phone_number" })
@@ -147,20 +143,7 @@ const createComplaintRecord = async (payload, options = {}) => {
     category: isNonEmptyString(payload.category)
       ? payload.category.trim().toLowerCase()
       : null,
-    priority: validated.priority,
-    location_text: isNonEmptyString(payload.location_text)
-      ? payload.location_text.trim()
-      : null,
-    latitude: payload.latitude != null ? Number(payload.latitude) : null,
-    longitude: payload.longitude != null ? Number(payload.longitude) : null,
-    ward_id: payload.ward_id || null,
-    department_id: payload.department_id || null,
-    source_message_id: isNonEmptyString(payload.source_message_id)
-      ? payload.source_message_id.trim()
-      : null,
-    source_call_id: isNonEmptyString(payload.source_call_id)
-      ? payload.source_call_id.trim()
-      : null,
+    priority: validated.priority
   };
 
   const { data: complaint, error: complaintError } = await supabaseAdmin

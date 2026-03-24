@@ -1,21 +1,74 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { theme } from "../utils/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import Card from "../components/Card";
 import PrimaryButton from "../components/PrimaryButton";
+import { Audio } from "expo-av";
 
 const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
-  const [step, setStep] = useState("record"); // record, transcribing, confirm
+  const [step, setStep] = useState("record"); // record, recording, transcribing, confirm
   const [transcript, setTranscript] = useState("");
+  const [recording, setRecording] = useState(null);
 
-  const handleRecordSimulate = () => {
-    setStep("transcribing");
-    // Simulate transcribing delay
-    setTimeout(() => {
-      setTranscript("There is a large pothole near the station disrupting traffic.");
+  useEffect(() => {
+    return () => {
+      if (recording) {
+        recording.stopAndUnloadAsync();
+      }
+    };
+  }, [recording]);
+
+  const startRecording = async () => {
+    try {
+      const permission = await Audio.requestPermissionsAsync();
+      if (permission.status === "granted") {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true,
+        });
+        const { recording } = await Audio.Recording.createAsync(
+          Audio.RecordingOptionsPresets.HIGH_QUALITY
+        );
+        setRecording(recording);
+        setStep("recording");
+      }
+    } catch (err) {
+      console.error("Failed to start recording", err);
+    }
+  };
+
+  const stopRecordingAndTranscribe = async () => {
+    try {
+      setStep("transcribing");
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      setRecording(null);
+
+      const formData = new FormData();
+      formData.append("audio", {
+        uri,
+        name: "complaint.m4a",
+        type: "audio/m4a",
+      });
+      formData.append("language", "English");
+
+      const res = await fetch("http://10.128.169.206:5000/api/interactions/voice/transcribe", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTranscript(data.transcript);
+      } else {
+        setTranscript("Transcription failed. Please try typing instead.");
+      }
       setStep("confirm");
-    }, 1500);
+    } catch (err) {
+      console.error(err);
+      setTranscript("Error transcribing audio.");
+      setStep("confirm");
+    }
   };
 
   const handleConfirm = () => {
@@ -43,7 +96,14 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
         {step === "record" && (
           <View style={styles.centerBox}>
             <Text style={styles.statusText}>Ready to record</Text>
-            <PrimaryButton label="Start Recording" onPress={handleRecordSimulate} />
+            <PrimaryButton label="Start Recording" onPress={startRecording} />
+          </View>
+        )}
+
+        {step === "recording" && (
+          <View style={styles.centerBox}>
+            <Text style={[styles.statusText, {color: "red"}]}>Recording...</Text>
+            <PrimaryButton label="Stop & Transcribe" variant="secondary" onPress={stopRecordingAndTranscribe} />
           </View>
         )}
 

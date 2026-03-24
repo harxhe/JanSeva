@@ -31,6 +31,8 @@ const classify = async (text) => {
   try {
     const response = await axios.post(`${AI_SERVICE_URL}/classify`, {
       text,
+      labels: ["Roads", "Water", "Sanitation", "Electrical", "Drainage", "Other"],
+      multi_label: false
     });
     return response.data;
   } catch (error) {

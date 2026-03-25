@@ -34,20 +34,22 @@ function App() {
   useEffect(() => {
     axios.get("http://localhost:5000/api/complaints").then((res) => {
       const data = res.data?.data || [];
-      const mapped = data.map(c => ({
-        id: c.complaint_number || c.id,
-        rawId: c.id,
-        title: c.category || "Issue Reported",
-        channel: (c.channel || "app").toUpperCase(),
-        priority: (c.priority || "Medium").charAt(0).toUpperCase() + (c.priority || "Medium").slice(1),
-        ward: c.ward_id ? `Ward ${c.ward_id}` : "Unassigned",
-        time: new Date(c.created_at).toLocaleString(),
-        status: (c.status || "New").replace("_", " "),
-        assignee: "Unassigned",
-        assigneeRole: "Responder",
-        tags: [c.category || "General"],
-        evidence: []
-      }));
+      const mapped = data.map((c) => ({
+  // keep both for now if you need them elsewhere
+  id: c.id,
+  complaint_number: c.complaint_number,
+  category: c.category,              // raw DB value, already lowercased from backend
+  channel: c.channel,                // sms | whatsapp | voice | app
+  priority: c.priority,              // low | medium | high | critical
+  status: c.status,                  // received | ai_classified | ...
+  created_at: c.created_at,
+  resolved_at: c.resolved_at,
+  raw_text: c.raw_text,
+  translated_text: c.translated_text,
+  // any extras you still want:
+  ward_id: c.ward_id,
+  location_text: c.location_text,
+}));
       setComplaints(mapped);
 
       const resolved = mapped.filter(m => m.status.toLowerCase().includes("resolved")).length;

@@ -30,6 +30,16 @@ class ExtractionResponse(BaseModel):
     language: Optional[str] = None
     model_name: str
 
+class TranslationRequest(BaseModel):
+    text: str
+    target_language: str = "English"
+
+class TranslationResponse(BaseModel):
+    translated_text: str
+    source_language: Optional[str] = None
+    target_language: str
+    model_name: str
+
 class ChatRequest(BaseModel):
     text: str
     history: List[Dict[str, str]] = []

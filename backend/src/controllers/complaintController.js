@@ -149,7 +149,7 @@ const createComplaintRecord = async (payload, options = {}) => {
   const { data: complaint, error: complaintError } = await supabaseAdmin
     .from("complaints")
     .insert(complaintPayload)
-    .select("id, complaint_number, status, channel, citizen_id, category, priority, raw_text, created_at, updated_at")
+    .select("id, complaint_number, status, channel, citizen_id, category, priority, raw_text, translated_text, created_at, updated_at")
     .single();
 
   if (complaintError) {
@@ -254,7 +254,7 @@ const listComplaints = async (req, res, next) => {
     let query = supabaseAdmin
       .from("complaints")
       .select(
-        "id, complaint_number, status, channel, priority, category, raw_text, created_at, updated_at, citizens(phone_number, name)",
+        "id, complaint_number, status, channel, priority, category, raw_text, translated_text, created_at, updated_at, citizens(phone_number, name)",
         { count: "exact" }
       )
       .order("created_at", { ascending: false })

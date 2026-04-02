@@ -14,6 +14,29 @@ const normalizeAiCategory = (value) =>
 const normalizePriority = (value) =>
   typeof value === "string" && value.trim() ? value.trim().toLowerCase() : DEFAULT_PRIORITY;
 
+const buildComplaintPreview = async (text, initialCategory, initialPriority) => {
+  const classification = await classifyComplaintText(text, initialCategory, initialPriority);
+  let translatedText = text;
+  let sourceLanguage = null;
+  let translationModelName = classification.modelName;
+
+  try {
+    const translation = await aiService.translate(text, "English");
+    translatedText = translation.translated_text || text;
+    sourceLanguage = translation.source_language || null;
+    translationModelName = translation.model_name || translationModelName;
+  } catch (error) {
+    console.error("Translation failed:", error);
+  }
+
+  return {
+    ...classification,
+    translatedText,
+    sourceLanguage,
+    translationModelName,
+  };
+};
+
 const classifyComplaintText = async (text, initialCategory, initialPriority) => {
   let category = initialCategory;
   let priority = initialPriority;
@@ -98,6 +121,7 @@ const persistAiResult = async (complaint, payload = {}) => {
 
   complaint.category = payload.category;
   complaint.priority = payload.priority;
+  complaint.translated_text = payload.translatedText || complaint.translated_text || null;
 
   return complaint;
 };
@@ -112,11 +136,41 @@ const emitComplaintCreated = (complaint, source) => {
   });
 };
 
+const previewComplaintInteraction = async (req, res, next) => {
+  try {
+    const body = req.body || {};
+    const text = typeof body.message_text === "string" ? body.message_text.trim() : "";
+
+    if (!text) {
+      return res.status(400).json({ success: false, error: "message_text is required" });
+    }
+
+    const preview = await buildComplaintPreview(text, body.category, body.priority);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        category: preview.category,
+        priority: preview.priority,
+        translated_text: preview.translatedText,
+        source_language: preview.sourceLanguage,
+        classification_confidence: preview.classificationConfidence,
+        model_name: preview.translationModelName || preview.modelName,
+      },
+    });
+  } catch (error) {
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    next(error);
+  }
+};
+
 const createChatInteraction = async (req, res, next) => {
   try {
     const body = req.body || {};
     const text = body.message_text;
-    const classification = await classifyComplaintText(text, body.category, body.priority);
+    const preview = await buildComplaintPreview(text, body.category, body.priority);
 
     const complaint = await createComplaintRecord(
       {
@@ -125,8 +179,9 @@ const createChatInteraction = async (req, res, next) => {
         preferred_language: body.preferred_language,
         channel: body.channel || "app",
         raw_text: text,
-        category: classification.category,
-        priority: classification.priority,
+        translated_text: body.translated_text || preview.translatedText,
+        category: preview.category,
+        priority: preview.priority,
         media: Array.isArray(body.media) ? body.media : [],
       },
       {
@@ -137,7 +192,8 @@ const createChatInteraction = async (req, res, next) => {
 
     if (text) {
       await persistAiResult(complaint, {
-        ...classification,
+        ...preview,
+        translatedText: body.translated_text || preview.translatedText,
         note: "AI classification applied during chat intake",
       });
     }
@@ -170,12 +226,14 @@ const transcribeVoiceNote = async (req, res, next) => {
     let transcript = "";
     let transcriptionConfidence = 0;
     let modelName = null;
+    let detectedLanguage = null;
 
     try {
       const transcriptionResult = await aiService.transcribe(file.path, language);
       transcript = transcriptionResult.text;
       transcriptionConfidence = transcriptionResult.confidence ?? 0;
       modelName = transcriptionResult.model_name || null;
+      detectedLanguage = transcriptionResult.language || null;
     } catch (err) {
       console.error("Transcription failed:", err);
       transcript = "Audio processing failed.";
@@ -185,11 +243,17 @@ const transcribeVoiceNote = async (req, res, next) => {
       });
     }
 
+    const preview = transcript ? await buildComplaintPreview(transcript, body.category, body.priority) : null;
+
     res.status(200).json({
       success: true,
       transcript,
       confidence: transcriptionConfidence,
       model_name: modelName,
+      detected_language: detectedLanguage,
+      translated_text: preview?.translatedText || transcript,
+      category: preview?.category || DEFAULT_CATEGORY.toLowerCase(),
+      priority: preview?.priority || DEFAULT_PRIORITY,
     });
   } catch (error) {
     next(error);
@@ -228,7 +292,7 @@ const createVoiceInteraction = async (req, res, next) => {
       return res.status(400).json({ success: false, error: "Transcript is required to file a voice complaint" });
     }
 
-    const classification = await classifyComplaintText(transcriptText, body.category, body.priority);
+    const preview = await buildComplaintPreview(transcriptText, body.category, body.priority);
     const relativeStoragePath = path.basename(file.path);
 
     const complaint = await createComplaintRecord(
@@ -238,8 +302,9 @@ const createVoiceInteraction = async (req, res, next) => {
         preferred_language: body.preferred_language,
         channel: "voice",
         raw_text: transcriptText,
-        category: classification.category,
-        priority: classification.priority,
+        translated_text: body.translated_text || preview.translatedText,
+        category: preview.category,
+        priority: preview.priority,
         media: [
           {
             media_type: "audio",
@@ -257,10 +322,11 @@ const createVoiceInteraction = async (req, res, next) => {
     );
 
     await persistAiResult(complaint, {
-      ...classification,
+      ...preview,
       transcriptText,
       transcriptConfidence,
-      modelName: transcriptionModelName || classification.modelName || "whisper",
+      translatedText: body.translated_text || preview.translatedText,
+      modelName: transcriptionModelName || preview.translationModelName || preview.modelName || "whisper",
       note: "AI transcript and classification applied during voice intake",
     });
 
@@ -280,6 +346,7 @@ const createVoiceInteraction = async (req, res, next) => {
 };
 
 module.exports = {
+  previewComplaintInteraction,
   createChatInteraction,
   transcribeVoiceNote,
   createVoiceInteraction,

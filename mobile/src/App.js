@@ -55,8 +55,12 @@ const App = () => {
         });
         formData.append("phone_number", user?.phone || "0000000000");
         formData.append("name", user?.name || "Guest");
-        formData.append("language", "English");
+        formData.append("language", payload.language || "English");
+        formData.append("preferred_language", payload.language || "English");
         formData.append("transcript_text", payload.summary || "");
+        formData.append("translated_text", payload.translatedText || payload.summary || "");
+        formData.append("category", payload.category || "general");
+        formData.append("priority", payload.priority || "medium");
 
         if (payload.transcriptConfidence != null) {
           formData.append("transcript_confidence", String(payload.transcriptConfidence));
@@ -73,8 +77,11 @@ const App = () => {
         const dbPayload = {
           phone_number: user?.phone || "0000000000",
           name: user?.name || "Guest",
+          preferred_language: payload.language || "English",
           category: payload.category !== "Pending Classification" ? payload.category : undefined,
+          priority: payload.priority,
           message_text: payload.summary,
+          translated_text: payload.translatedText,
           channel: "app"
         };
 
@@ -89,22 +96,27 @@ const App = () => {
       console.log("Queued for backend:", data);
 
       if (data.success && data.data) {
-         setHistory([{
+         const historyItem = {
             id: `C-${data.data.complaint_number || data.data.id.slice(0, 4)}`,
             title: payload.title,
             category: data.data.category || payload.category || "General",
-            summary: payload.summary,
+            summary: data.data.translated_text || payload.translatedText || payload.summary,
             status: data.data.status || "received",
             createdAt: "Just now"
-         }, ...history]);
+         };
+         setHistory([historyItem, ...history]);
+         return data.data;
       }
     } catch (err) {
       console.error(err);
       setHistory([item, ...history]); // optimistic if fails
+      throw err;
     }
+
+    return null;
   };
 
-  const handleSubmit = (payload) => {
+  const handleSubmit = async (payload) => {
     const item = {
       id: `C-${Date.now().toString().slice(-4)}`,
       title: payload.title,
@@ -113,9 +125,17 @@ const App = () => {
       status: "New",
       createdAt: "Just now",
     };
-    queueForBackend(payload, item);
-    Alert.alert("Submitted", "Your issue was captured and queued.");
-    setScreen("history");
+    try {
+      const complaint = await queueForBackend(payload, item);
+      const category = complaint?.category || payload.category || "general";
+      Alert.alert("Submitted", `Your complaint has been filed under ${category}.`);
+      setScreen("history");
+      return complaint;
+    } catch (error) {
+      Alert.alert("Saved locally", "We could not reach the server, but your complaint is saved in history.");
+      setScreen("history");
+      return null;
+    }
   };
 
   if (!user) {

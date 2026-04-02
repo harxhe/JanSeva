@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
-from app.schemas import ClassificationResponse, ExtractionResponse
+from app.schemas import ClassificationResponse, ExtractionResponse, TranslationResponse
 
 import logging
 logger = logging.getLogger(__name__)
@@ -117,6 +117,46 @@ class BrainAgent:
                 summary=text[:300],
                 language=None,
                 model_name=self.llm.model_name
+            )
+
+    def translate_text(self, text: str, target_language: str = "English") -> TranslationResponse:
+        prompt = ChatPromptTemplate.from_template(
+            """You are a civic complaint translation assistant.
+            Translate the following complaint into {target_language} while preserving civic details faithfully.
+
+            Text: {text}
+
+            Output ONLY valid JSON matching this schema:
+            {{
+                "translated_text": "string",
+                "source_language": "string or null",
+                "target_language": "string"
+            }}
+            No explanation or extra text."""
+        )
+
+        chain = prompt | self.llm | self.parser
+
+        try:
+            result = chain.invoke({
+                "text": text,
+                "target_language": target_language,
+            })
+
+            return TranslationResponse(
+                translated_text=result.get("translated_text", text),
+                source_language=result.get("source_language"),
+                target_language=result.get("target_language", target_language),
+                model_name=self.llm.model_name,
+            )
+        except Exception:
+            import traceback
+            logger.error(f"Translation error: {traceback.format_exc()}")
+            return TranslationResponse(
+                translated_text=text,
+                source_language=None,
+                target_language=target_language,
+                model_name=self.llm.model_name,
             )
 
     def chat(self, text: str, history: List[Dict[str, str]], language: str = "English") -> str:

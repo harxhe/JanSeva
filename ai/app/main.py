@@ -20,9 +20,9 @@ from app.schemas import (
     ClassificationRequest,
     ClassificationResponse,
     ExtractionRequest,
-    ClassificationResponse,
-    ExtractionRequest,
     ExtractionResponse,
+    TranslationRequest,
+    TranslationResponse,
     ChatRequest,
     ChatResponse
 )
@@ -131,6 +131,18 @@ async def extract(request: ExtractionRequest):
         result = brain.extract_complaint_data(
             text=request.text,
             labels=request.labels
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/translate", response_model=TranslationResponse)
+async def translate(request: TranslationRequest):
+    try:
+        brain = get_brain_agent()
+        result = brain.translate_text(
+            text=request.text,
+            target_language=request.target_language
         )
         return result
     except Exception as e:

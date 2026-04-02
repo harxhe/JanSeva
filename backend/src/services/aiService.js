@@ -54,6 +54,19 @@ const extract = async (text) => {
   }
 };
 
+const translate = async (text, targetLanguage = "English") => {
+  try {
+    const response = await axios.post(`${AI_SERVICE_URL}/translate`, {
+      text,
+      target_language: targetLanguage,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("AI Service Error (Translate):", error.message);
+    throw error;
+  }
+};
+
 const chat = async (text, history = [], language = "en") => {
   try {
     const response = await axios.post(`${AI_SERVICE_URL}/chat`, {
@@ -72,5 +85,6 @@ module.exports = {
   transcribe,
   classify,
   extract,
+  translate,
   chat,
 };

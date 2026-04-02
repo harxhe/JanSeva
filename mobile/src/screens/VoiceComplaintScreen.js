@@ -10,6 +10,9 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
   const [step, setStep] = useState("record"); // record, recording, transcribing, confirm
   const [transcript, setTranscript] = useState("");
   const [recording, setRecording] = useState(null);
+  const [audioUri, setAudioUri] = useState("");
+  const [transcriptConfidence, setTranscriptConfidence] = useState(null);
+  const [transcriptionModelName, setTranscriptionModelName] = useState("");
 
   useEffect(() => {
     return () => {
@@ -44,6 +47,7 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
       setRecording(null);
+      setAudioUri(uri || "");
 
       const formData = new FormData();
       formData.append("audio", {
@@ -60,13 +64,19 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
       const data = await res.json();
       if (data.success) {
         setTranscript(data.transcript);
+        setTranscriptConfidence(data.confidence ?? null);
+        setTranscriptionModelName(data.model_name || "");
       } else {
         setTranscript("Transcription failed. Please try typing instead.");
+        setTranscriptConfidence(null);
+        setTranscriptionModelName("");
       }
       setStep("confirm");
     } catch (err) {
       console.error(err);
       setTranscript("Error transcribing audio.");
+      setTranscriptConfidence(null);
+      setTranscriptionModelName("");
       setStep("confirm");
     }
   };
@@ -76,12 +86,19 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
       title: "Voice issue reported",
       category: "Pending Classification",
       summary: transcript,
+      submissionMode: "voice",
+      audioUri,
+      transcriptConfidence,
+      transcriptionModelName,
     };
     onSubmit(payload);
   };
 
   const handleReject = () => {
     setTranscript("");
+    setAudioUri("");
+    setTranscriptConfidence(null);
+    setTranscriptionModelName("");
     setStep("record");
   };
 

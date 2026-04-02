@@ -43,19 +43,48 @@ const App = () => {
 
   const queueForBackend = async (payload, item) => {
     try {
-      const dbPayload = {
-        phone_number: user?.phone || "0000000000",
-        name: user?.name || "Guest",
-        category: payload.category !== "Pending Classification" ? payload.category : undefined,
-        message_text: payload.summary,
-        channel: "app"
-      };
-      
-      const res = await fetch("http://10.128.169.206:5000/api/interactions/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dbPayload)
-      });
+      const isVoiceSubmission = payload.submissionMode === "voice" && payload.audioUri;
+      let res;
+
+      if (isVoiceSubmission) {
+        const formData = new FormData();
+        formData.append("audio", {
+          uri: payload.audioUri,
+          name: "complaint.m4a",
+          type: "audio/m4a",
+        });
+        formData.append("phone_number", user?.phone || "0000000000");
+        formData.append("name", user?.name || "Guest");
+        formData.append("language", "English");
+        formData.append("transcript_text", payload.summary || "");
+
+        if (payload.transcriptConfidence != null) {
+          formData.append("transcript_confidence", String(payload.transcriptConfidence));
+        }
+        if (payload.transcriptionModelName) {
+          formData.append("transcription_model_name", payload.transcriptionModelName);
+        }
+
+        res = await fetch("http://10.128.169.206:5000/api/interactions/voice/submit", {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        const dbPayload = {
+          phone_number: user?.phone || "0000000000",
+          name: user?.name || "Guest",
+          category: payload.category !== "Pending Classification" ? payload.category : undefined,
+          message_text: payload.summary,
+          channel: "app"
+        };
+
+        res = await fetch("http://10.128.169.206:5000/api/interactions/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dbPayload)
+        });
+      }
+
       const data = await res.json();
       console.log("Queued for backend:", data);
 
@@ -63,9 +92,9 @@ const App = () => {
          setHistory([{
             id: `C-${data.data.complaint_number || data.data.id.slice(0, 4)}`,
             title: payload.title,
-            category: data.data.category || "General",
+            category: data.data.category || payload.category || "General",
             summary: payload.summary,
-            status: data.data.status || "New",
+            status: data.data.status || "received",
             createdAt: "Just now"
          }, ...history]);
       }

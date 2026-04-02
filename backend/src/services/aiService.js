@@ -41,6 +41,19 @@ const classify = async (text) => {
   }
 };
 
+const extract = async (text) => {
+  try {
+    const response = await axios.post(`${AI_SERVICE_URL}/extract`, {
+      text,
+      labels: ["Roads", "Water", "Sanitation", "Electrical", "Drainage", "Other"],
+    });
+    return response.data;
+  } catch (error) {
+    console.error("AI Service Error (Extract):", error.message);
+    throw error;
+  }
+};
+
 const chat = async (text, history = [], language = "en") => {
   try {
     const response = await axios.post(`${AI_SERVICE_URL}/chat`, {
@@ -58,5 +71,6 @@ const chat = async (text, history = [], language = "en") => {
 module.exports = {
   transcribe,
   classify,
+  extract,
   chat,
 };

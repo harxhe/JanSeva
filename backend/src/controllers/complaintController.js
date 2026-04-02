@@ -149,7 +149,7 @@ const createComplaintRecord = async (payload, options = {}) => {
   const { data: complaint, error: complaintError } = await supabaseAdmin
     .from("complaints")
     .insert(complaintPayload)
-    .select("id, complaint_number, status, channel, citizen_id, created_at")
+    .select("id, complaint_number, status, channel, citizen_id, category, priority, raw_text, created_at, updated_at")
     .single();
 
   if (complaintError) {

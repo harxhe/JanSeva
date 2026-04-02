@@ -1,6 +1,12 @@
 import ComplaintList from "../components/ComplaintList";
 
 const Complaints = ({ complaints }) => {
+  const getEvidenceLabel = (file) => {
+    const type = file?.media_type || file?.type || "file";
+    const size = file?.size || (file?.size_bytes != null ? `${file.size_bytes} bytes` : null);
+    return [type, size].filter(Boolean).join(" · ");
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="card">
@@ -30,13 +36,11 @@ const Complaints = ({ complaints }) => {
                   ) : (
                     item.evidence.map((file) => (
                       <div
-                        key={file.id}
+                        key={file.id || file.storage_path}
                         className="flex items-center justify-between rounded-xl bg-ink-900/5 px-3 py-2 text-xs"
                       >
-                        <span>{file.title}</span>
-                        <span className="text-ink-600">
-                          {file.type} · {file.size}
-                        </span>
+                        <span>{file.title || file.storage_path || "Attached file"}</span>
+                        <span className="text-ink-600">{getEvidenceLabel(file)}</span>
                       </div>
                     ))
                   )}

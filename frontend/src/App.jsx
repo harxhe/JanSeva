@@ -35,26 +35,35 @@ function App() {
     axios.get("http://localhost:5000/api/complaints").then((res) => {
       const data = res.data?.data || [];
       const mapped = data.map((c) => ({
-  // keep both for now if you need them elsewhere
-  id: c.id,
-  complaint_number: c.complaint_number,
-  category: c.category,              // raw DB value, already lowercased from backend
-  channel: c.channel,                // sms | whatsapp | voice | app
-  priority: c.priority,              // low | medium | high | critical
-  status: c.status,                  // received | ai_classified | ...
-  created_at: c.created_at,
-  resolved_at: c.resolved_at,
-  raw_text: c.raw_text,
-  translated_text: c.translated_text,
-  // any extras you still want:
-  ward_id: c.ward_id,
-  location_text: c.location_text,
-}));
+        id: c.id,
+        complaint_number: c.complaint_number,
+        title:
+          c.category ||
+          c.raw_text?.slice(0, 60) ||
+          `Complaint ${c.complaint_number || ""}`.trim(),
+        category: c.category,
+        channel: c.channel,
+        priority: c.priority,
+        status: c.status,
+        created_at: c.created_at,
+        resolved_at: c.resolved_at,
+        raw_text: c.raw_text,
+        translated_text: c.translated_text,
+        ward_id: c.ward_id,
+        location_text: c.location_text,
+        evidence: Array.isArray(c.media) ? c.media : [],
+      }));
       setComplaints(mapped);
 
-      const resolved = mapped.filter(m => m.status.toLowerCase().includes("resolved")).length;
-      const inReview = mapped.filter(m => !m.status.toLowerCase().includes("resolved") && m.status !== "new").length;
-      const newToday = mapped.filter(m => m.status.toLowerCase() === "new" || m.status.toLowerCase() === "received").length;
+      const resolved = mapped.filter((m) => (m.status || "").toLowerCase().includes("resolved")).length;
+      const inReview = mapped.filter((m) => {
+        const status = (m.status || "").toLowerCase();
+        return status && !status.includes("resolved") && status !== "received";
+      }).length;
+      const newToday = mapped.filter((m) => {
+        const status = (m.status || "").toLowerCase();
+        return status === "new" || status === "received";
+      }).length;
 
       setStats([
         { label: "New Today", value: newToday.toString(), trend: "+0%", tone: "jade", detail: "Active issues" },
@@ -67,8 +76,8 @@ function App() {
          { message: "Live dashboard active", time: "Just now" }
       ]);
 
-      const appTextCount = mapped.filter(c => c.channel === "APP" && !c.title.toLowerCase().includes("voice")).length;
-      const appVoiceCount = mapped.filter(c => c.channel === "APP" && c.title.toLowerCase().includes("voice")).length;
+      const appTextCount = mapped.filter((c) => (c.channel || "").toLowerCase() === "app").length;
+      const appVoiceCount = mapped.filter((c) => (c.channel || "").toLowerCase() === "voice").length;
       setChannels([
         { name: "App (Text)", value: appTextCount },
         { name: "App (Voice)", value: appVoiceCount }

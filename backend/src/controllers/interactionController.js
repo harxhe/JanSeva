@@ -71,6 +71,22 @@ const normalizeNullableString = (value) => {
   return trimmed && trimmed.toLowerCase() !== "null" ? trimmed : null;
 };
 
+const getUploadedAudioFile = (req) => {
+  if (req.file) {
+    return req.file;
+  }
+
+  if (Array.isArray(req.files) && req.files.length > 0) {
+    return (
+      req.files.find((file) => file.fieldname === "audio") ||
+      req.files.find((file) => file.fieldname === "file") ||
+      req.files[0]
+    );
+  }
+
+  return null;
+};
+
 const buildComplaintPreview = async (text, initialCategory, initialPriority) => {
   const classification = await classifyComplaintText(text, initialCategory, initialPriority);
   let translatedText = text;
@@ -276,7 +292,7 @@ const createChatInteraction = async (req, res, next) => {
 
 const transcribeVoiceNote = async (req, res, next) => {
   try {
-    const file = req.file;
+    const file = getUploadedAudioFile(req);
     const body = req.body || {};
     const language = body.language || "English";
 
@@ -337,7 +353,7 @@ const transcribeVoiceNote = async (req, res, next) => {
 };
 
 const createVoiceInteraction = async (req, res, next) => {
-  const file = req.file;
+  const file = getUploadedAudioFile(req);
 
   try {
     const body = req.body || {};

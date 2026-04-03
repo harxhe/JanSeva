@@ -88,8 +88,8 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
       const formData = new FormData();
       formData.append("audio", {
         uri,
-        name: "complaint.m4a",
-        type: "audio/m4a",
+        name: uri.split("/").pop() || "complaint.m4a",
+        type: "audio/mp4",
       });
       formData.append("language", selectedLanguage);
 

@@ -140,7 +140,10 @@ const App = () => {
       setScreen("history");
       return complaint;
     } catch (error) {
-      Alert.alert("Saved locally", "We could not reach the server, but your complaint is saved in history.");
+      Alert.alert(
+        "Saved locally",
+        `We could not reach the complaint backend at ${apiUrl("/api/interactions/chat")}, but your complaint is saved in history.`
+      );
       setScreen("history");
       return null;
     }

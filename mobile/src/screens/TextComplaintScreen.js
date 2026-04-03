@@ -15,6 +15,18 @@ const buildFallbackPreview = (description) => ({
   fallback: true,
 });
 
+const getPreviewErrorMessage = (error) => {
+  if (error?.name === "AbortError") {
+    return "The complaint review service took too long to respond. Please try again.";
+  }
+
+  if (error instanceof TypeError) {
+    return `Could not reach the complaint backend at ${apiUrl("/api/interactions/preview")}. Please check that the backend is running.`;
+  }
+
+  return "We could not fetch the AI review right now, so you can file using the original text.";
+};
+
 const TextComplaintScreen = ({ onBack, onSubmit }) => {
   const [description, setDescription] = useState("");
   const [preview, setPreview] = useState(null);
@@ -55,7 +67,7 @@ const TextComplaintScreen = ({ onBack, onSubmit }) => {
     } catch (error) {
       console.error(error);
       setPreview(buildFallbackPreview(description));
-      setErrorMessage("We could not fetch the AI review right now, so you can file using the original text.");
+      setErrorMessage(getPreviewErrorMessage(error));
     } finally {
       setLoading(false);
     }

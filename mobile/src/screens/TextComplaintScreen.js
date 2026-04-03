@@ -6,30 +6,55 @@ import Card from "../components/Card";
 import InputField from "../components/InputField";
 import PrimaryButton from "../components/PrimaryButton";
 
+const buildFallbackPreview = (description) => ({
+  category: "general",
+  priority: "medium",
+  translated_text: description,
+  source_language: "English",
+  fallback: true,
+});
+
 const TextComplaintScreen = ({ onBack, onSubmit }) => {
   const [description, setDescription] = useState("");
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handlePreview = async () => {
     if (!description.trim()) return;
 
+    setErrorMessage("");
+
     try {
       setLoading(true);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
       const res = await fetch("http://10.128.169.206:5000/api/interactions/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           message_text: description,
         }),
       });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        throw new Error(`Preview request failed with ${res.status}`);
+      }
+
       const data = await res.json();
 
       if (data.success) {
         setPreview(data.data);
+      } else {
+        throw new Error(data.error || "Preview request was not successful");
       }
     } catch (error) {
       console.error(error);
+      setPreview(buildFallbackPreview(description));
+      setErrorMessage("We could not fetch the AI review right now, so you can file using the original text.");
     } finally {
       setLoading(false);
     }
@@ -75,6 +100,7 @@ const TextComplaintScreen = ({ onBack, onSubmit }) => {
         ) : (
           <View style={styles.previewWrap}>
             <Text style={styles.sectionTitle}>Review before filing</Text>
+            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
             <View style={styles.metaRow}>
               <Text style={styles.metaChip}>Category: {preview.category}</Text>
               <Text style={styles.metaChip}>Priority: {preview.priority}</Text>
@@ -136,6 +162,11 @@ const styles = StyleSheet.create({
   helperText: {
     color: theme.colors.inkMuted,
     fontSize: 13,
+  },
+  errorText: {
+    color: theme.colors.danger,
+    fontSize: 13,
+    lineHeight: 18,
   },
   metaRow: {
     flexDirection: "row",

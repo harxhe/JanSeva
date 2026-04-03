@@ -49,11 +49,14 @@ const App = () => {
 
       if (isVoiceSubmission) {
         const formData = new FormData();
-        formData.append("audio", {
-          uri: payload.audioUri,
-          name: "complaint.m4a",
-          type: "audio/m4a",
-        });
+        formData.append(
+          "audio",
+          payload.audioUpload || {
+            uri: payload.audioUri,
+            name: "complaint.m4a",
+            type: "audio/mp4",
+          }
+        );
         formData.append("phone_number", user?.phone || "0000000000");
         formData.append("name", user?.name || "Guest");
         formData.append("language", payload.language || "English");
@@ -97,10 +100,11 @@ const App = () => {
       console.log("Queued for backend:", data);
 
       if (data.success && data.data) {
-         const historyItem = {
-            id: `C-${data.data.complaint_number || data.data.id.slice(0, 4)}`,
-            title: payload.title,
-            category: data.data.category || payload.category || "General",
+         const resolvedCategory = data.data.category || payload.category || "General";
+          const historyItem = {
+             id: `C-${data.data.complaint_number || data.data.id.slice(0, 4)}`,
+            title: resolvedCategory,
+            category: resolvedCategory,
             summary: data.data.translated_text || payload.translatedText || payload.summary,
             status: data.data.status || "received",
             createdAt: "Just now"
@@ -118,10 +122,11 @@ const App = () => {
   };
 
   const handleSubmit = async (payload) => {
+    const fallbackCategory = payload.category || "General";
     const item = {
       id: `C-${Date.now().toString().slice(-4)}`,
-      title: payload.title,
-      category: payload.category,
+      title: fallbackCategory,
+      category: fallbackCategory,
       summary: payload.summary,
       status: "New",
       createdAt: "Just now",

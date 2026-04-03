@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { View, Text, StyleSheet, Pressable, Platform } from "react-native";
 import { theme } from "../utils/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import Card from "../components/Card";
@@ -7,14 +7,9 @@ import PrimaryButton from "../components/PrimaryButton";
 import { Audio } from "expo-av";
 import { apiUrl } from "../config/api";
 
-const LANGUAGE_OPTIONS = [
-  "English",
-  "Hindi",
-  "Bengali",
-  "Tamil",
-  "Telugu",
-  "Marathi",
-];
+const LANGUAGE_OPTIONS = ["English", "Hindi", "Bengali", "Tamil", "Telugu", "Marathi"];
+
+const isWeb = Platform.OS === "web";
 
 const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
   const [step, setStep] = useState("record");
@@ -25,14 +20,25 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
   const [predictedPriority, setPredictedPriority] = useState("medium");
   const [recording, setRecording] = useState(null);
   const [audioUri, setAudioUri] = useState("");
+  const [audioUpload, setAudioUpload] = useState(null);
   const [transcriptConfidence, setTranscriptConfidence] = useState(null);
   const [transcriptionModelName, setTranscriptionModelName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const webRecorderRef = useRef(null);
+  const webStreamRef = useRef(null);
+  const webChunksRef = useRef([]);
 
   useEffect(() => {
     return () => {
       if (recording) {
         recording.stopAndUnloadAsync();
+      }
+      if (webRecorderRef.current && webRecorderRef.current.state !== "inactive") {
+        webRecorderRef.current.stop();
+      }
+      if (webStreamRef.current) {
+        webStreamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
   }, [recording]);
@@ -43,54 +49,129 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
     setPredictedCategory("pending classification");
     setPredictedPriority("medium");
     setAudioUri("");
+    setAudioUpload(null);
     setTranscriptConfidence(null);
     setTranscriptionModelName("");
     setErrorMessage("");
     setStep("record");
   };
 
+  const startWebRecording = async () => {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setErrorMessage("Voice recording is not supported in this browser.");
+      setStep("confirm");
+      return;
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const recorder = new MediaRecorder(stream);
+    webChunksRef.current = [];
+
+    recorder.ondataavailable = (event) => {
+      if (event.data && event.data.size > 0) {
+        webChunksRef.current.push(event.data);
+      }
+    };
+
+    webStreamRef.current = stream;
+    webRecorderRef.current = recorder;
+    recorder.start();
+    setStep("recording");
+  };
+
+  const startNativeRecording = async () => {
+    const permission = await Audio.requestPermissionsAsync();
+    if (permission.status !== "granted") {
+      throw new Error("Microphone permission was not granted.");
+    }
+
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: true,
+      playsInSilentModeIOS: true,
+    });
+
+    const { recording: nextRecording } = await Audio.Recording.createAsync(
+      Audio.RecordingOptionsPresets.HIGH_QUALITY
+    );
+
+    setRecording(nextRecording);
+    setStep("recording");
+  };
+
   const startRecording = async () => {
     try {
-      const permission = await Audio.requestPermissionsAsync();
-      if (permission.status === "granted") {
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: true,
-          playsInSilentModeIOS: true,
-        });
-        const { recording: nextRecording } = await Audio.Recording.createAsync(
-          Audio.RecordingOptionsPresets.HIGH_QUALITY
-        );
-        setRecording(nextRecording);
-        setStep("recording");
+      setErrorMessage("");
+      if (isWeb) {
+        await startWebRecording();
+      } else {
+        await startNativeRecording();
       }
     } catch (err) {
       console.error("Failed to start recording", err);
+      setErrorMessage("Could not start voice recording. Please check microphone access.");
+      setStep("confirm");
     }
+  };
+
+  const buildWebAudioUpload = async () => {
+    const recorder = webRecorderRef.current;
+
+    if (!recorder) {
+      throw new Error("Web recorder is not initialized.");
+    }
+
+    await new Promise((resolve) => {
+      recorder.onstop = resolve;
+      recorder.stop();
+    });
+
+    if (webStreamRef.current) {
+      webStreamRef.current.getTracks().forEach((track) => track.stop());
+      webStreamRef.current = null;
+    }
+
+    const mimeType = webChunksRef.current[0]?.type || "audio/webm";
+    const blob = new Blob(webChunksRef.current, { type: mimeType });
+    const extension = mimeType.includes("ogg") ? "ogg" : "webm";
+    const file = new File([blob], `complaint.${extension}`, { type: mimeType });
+
+    const objectUrl = URL.createObjectURL(blob);
+    setAudioUri(objectUrl);
+    setAudioUpload(file);
+    webRecorderRef.current = null;
+
+    return file;
+  };
+
+  const buildNativeAudioUpload = async () => {
+    await recording.stopAndUnloadAsync();
+    const uri = recording.getURI();
+    setRecording(null);
+
+    if (!uri) {
+      throw new Error("The recording was not saved correctly on the device.");
+    }
+
+    const upload = {
+      uri,
+      name: uri.split("/").pop() || "complaint.m4a",
+      type: "audio/mp4",
+    };
+
+    setAudioUri(uri);
+    setAudioUpload(upload);
+    return upload;
   };
 
   const stopRecordingAndTranscribe = async () => {
     try {
       setStep("transcribing");
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      setRecording(null);
-      setAudioUri(uri || "");
       setErrorMessage("");
 
-      if (!uri) {
-        setTranscript("Could not access the recorded audio. Please try again.");
-        setTranslatedText("");
-        setErrorMessage("The recording was not saved correctly on the device.");
-        setStep("confirm");
-        return;
-      }
+      const upload = isWeb ? await buildWebAudioUpload() : await buildNativeAudioUpload();
 
       const formData = new FormData();
-      formData.append("audio", {
-        uri,
-        name: uri.split("/").pop() || "complaint.m4a",
-        type: "audio/mp4",
-      });
+      formData.append("audio", upload);
       formData.append("language", selectedLanguage);
 
       const res = await fetch(apiUrl("/api/interactions/voice/transcribe"), {
@@ -118,20 +199,21 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
       console.error(err);
       setTranscript("");
       setTranslatedText("");
-      setErrorMessage("Could not reach the server for transcription. Please try again.");
+      setErrorMessage(err.message || "Could not reach the server for transcription. Please try again.");
       setStep("confirm");
     }
   };
 
   const handleConfirm = async () => {
     const payload = {
-      title: "Voice issue reported",
+      title: predictedCategory || "voice complaint",
       category: predictedCategory,
       priority: predictedPriority,
       summary: transcript,
       translatedText,
       submissionMode: "voice",
       audioUri,
+      audioUpload,
       transcriptConfidence,
       transcriptionModelName,
       language: selectedLanguage,

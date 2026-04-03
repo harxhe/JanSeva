@@ -297,14 +297,29 @@ const transcribeVoiceNote = async (req, res, next) => {
       detectedLanguage = transcriptionResult.language || null;
     } catch (err) {
       console.error("Transcription failed:", err);
-      transcript = "Audio processing failed.";
+      return res.status(502).json({
+        success: false,
+        error: "We could not transcribe this recording. Please try again.",
+      });
     } finally {
       fs.unlink(file.path, (err) => {
         if (err) console.error("Failed to delete temp file:", err);
       });
     }
 
-    const preview = transcript ? await buildComplaintPreview(transcript, body.category, body.priority) : null;
+    if (!transcript || !transcript.trim()) {
+      return res.status(422).json({
+        success: false,
+        error: "No speech was detected in the recording. Please try again.",
+      });
+    }
+
+    let preview = null;
+    try {
+      preview = await buildComplaintPreview(transcript, body.category, body.priority);
+    } catch (previewError) {
+      console.error("Voice preview generation failed:", previewError);
+    }
 
     res.status(200).json({
       success: true,

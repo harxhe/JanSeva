@@ -27,6 +27,7 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
   const [audioUri, setAudioUri] = useState("");
   const [transcriptConfidence, setTranscriptConfidence] = useState(null);
   const [transcriptionModelName, setTranscriptionModelName] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     return () => {
@@ -44,6 +45,7 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
     setAudioUri("");
     setTranscriptConfidence(null);
     setTranscriptionModelName("");
+    setErrorMessage("");
     setStep("record");
   };
 
@@ -73,6 +75,15 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
       const uri = recording.getURI();
       setRecording(null);
       setAudioUri(uri || "");
+      setErrorMessage("");
+
+      if (!uri) {
+        setTranscript("Could not access the recorded audio. Please try again.");
+        setTranslatedText("");
+        setErrorMessage("The recording was not saved correctly on the device.");
+        setStep("confirm");
+        return;
+      }
 
       const formData = new FormData();
       formData.append("audio", {
@@ -88,23 +99,26 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
       });
       const data = await res.json();
 
-      if (data.success) {
+      if (res.ok && data.success) {
         setTranscript(data.transcript || "");
         setTranslatedText(data.translated_text || data.transcript || "");
         setPredictedCategory(data.category || "general");
         setPredictedPriority(data.priority || "medium");
         setTranscriptConfidence(data.confidence ?? null);
         setTranscriptionModelName(data.model_name || "");
+        setErrorMessage("");
       } else {
-        setTranscript("Transcription failed. Please try again.");
+        setTranscript("");
         setTranslatedText("");
+        setErrorMessage(data.error || data.message || "Transcription failed. Please try again.");
       }
 
       setStep("confirm");
     } catch (err) {
       console.error(err);
-      setTranscript("Error transcribing audio.");
+      setTranscript("");
       setTranslatedText("");
+      setErrorMessage("Could not reach the server for transcription. Please try again.");
       setStep("confirm");
     }
   };
@@ -179,18 +193,20 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
               <Text style={styles.metaChip}>Priority: {predictedPriority}</Text>
             </View>
 
+            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
             <Text style={styles.label}>Transcription</Text>
-            <Text style={styles.previewBox}>{transcript}</Text>
+            <Text style={styles.previewBox}>{transcript || "No transcription available yet."}</Text>
 
             <Text style={styles.label}>English translation</Text>
-            <Text style={styles.previewBox}>{translatedText || transcript}</Text>
+            <Text style={styles.previewBox}>{translatedText || transcript || "No translation available yet."}</Text>
 
             <View style={styles.buttonRow}>
               <View style={styles.buttonWrap}>
                 <PrimaryButton label="Retry" variant="secondary" onPress={resetPreview} />
               </View>
               <View style={styles.buttonWrap}>
-                <PrimaryButton label="Confirm & File" onPress={handleConfirm} />
+                <PrimaryButton label="Confirm & File" onPress={handleConfirm} disabled={!transcript || !!errorMessage} />
               </View>
             </View>
           </View>
@@ -268,6 +284,11 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontSize: 12,
     fontWeight: "600",
+  },
+  errorText: {
+    color: theme.colors.danger,
+    fontSize: 13,
+    lineHeight: 18,
   },
   label: {
     fontSize: 12,

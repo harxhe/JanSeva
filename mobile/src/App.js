@@ -1,15 +1,19 @@
 import { useMemo, useState, useEffect } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, View, Alert } from "react-native";
 import { theme } from "./utils/theme";
-import SignInScreen from "./screens/SignInScreen";
 import HomeScreen from "./screens/HomeScreen";
 import TextComplaintScreen from "./screens/TextComplaintScreen";
 import VoiceComplaintScreen from "./screens/VoiceComplaintScreen.js";
 import HistoryScreen from "./screens/HistoryScreen";
 import { apiUrl } from "./config/api";
 
+const DEFAULT_USER = {
+  name: "Citizen",
+  phone: "",
+};
+
 const App = () => {
-  const [user, setUser] = useState(null);
+  const [user] = useState(DEFAULT_USER);
   const [screen, setScreen] = useState("home");
   const [history, setHistory] = useState([]);
 
@@ -147,10 +151,6 @@ const App = () => {
       return null;
     }
   };
-
-  if (!user) {
-    return <SignInScreen onSuccess={(profile) => { setUser(profile); setScreen("home"); }} />;
-  }
 
   const renderScreen = () => {
     switch (screen) {

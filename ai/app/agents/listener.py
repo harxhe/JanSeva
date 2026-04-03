@@ -18,16 +18,29 @@ class ListenerAgent:
         """
         Transcribes audio file using Groq's cloud API and returns (text, language, confidence, model_name).
         """
-        params = {
-            "file": (os.path.basename(audio_path), open(audio_path, "rb").read()),
-            "model": self.model_name,
-            "response_format": "verbose_json",
-        }
-        
-        if language_hint:
-            params["language"] = language_hint
+        with open(audio_path, "rb") as audio_file:
+            audio_bytes = audio_file.read()
 
-        transcription = self.client.audio.transcriptions.create(**params)
+        def request_transcription(active_hint: Optional[str] = None):
+            params = {
+                "file": (os.path.basename(audio_path), audio_bytes),
+                "model": self.model_name,
+                "response_format": "verbose_json",
+            }
+
+            if active_hint:
+                params["language"] = active_hint
+
+            return self.client.audio.transcriptions.create(**params)
+
+        try:
+            transcription = request_transcription(language_hint)
+        except Exception as exc:
+            if language_hint:
+                logger.warning("Transcription with language hint '%s' failed, retrying without hint: %s", language_hint, exc)
+                transcription = request_transcription(None)
+            else:
+                raise
             
         text = getattr(transcription, 'text', "")
         language = getattr(transcription, 'language', "auto")

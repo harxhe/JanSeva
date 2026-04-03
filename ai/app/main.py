@@ -2,6 +2,7 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, UploadFile, File, Body, Form
 from dotenv import load_dotenv
+from typing import cast
 
 import logging
 load_dotenv()
@@ -69,8 +70,9 @@ async def transcribe(
             temp_path = download_audio(audio_url)
         elif file:
             content = await file.read()
-            print(f"DEBUG: Received file {file.filename}, size: {len(content)} bytes")
-            temp_path = save_upload(content, file.filename)
+            upload_filename = cast(str, file.filename) if file.filename else "upload.webm"
+            print(f"DEBUG: Received file {upload_filename}, size: {len(content)} bytes")
+            temp_path = save_upload(content, upload_filename)
         else:
             raise HTTPException(status_code=400, detail="Missing audio_url or file upload")
 
@@ -78,18 +80,28 @@ async def transcribe(
         # Convert full language name to ISO code if possible
         lang_map = {
             "English": "en",
+            "Assamese": "as",
             "Hindi": "hi",
             "Bengali": "bn",
+            "Bodo": "brx",
+            "Dogri": "doi",
             "Tamil": "ta",
             "Punjabi": "pa",
             "Marathi": "mr",
             "Gujarati": "gu",
             "Kannada": "kn",
+            "Kashmiri": "ks",
+            "Konkani": "gom",
             "Telugu": "te",
             "Malayalam": "ml",
+            "Manipuri": "mni",
+            "Nepali": "ne",
             "Odia": "or",
             "Urdu": "ur",
             "Maithili": "mai",
+            "Sanskrit": "sa",
+            "Santali": "sat",
+            "Sindhi": "sd",
         }
         language_hint = lang_map.get(language)
         

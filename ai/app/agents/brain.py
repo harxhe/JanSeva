@@ -73,6 +73,11 @@ class BrainAgent:
         prompt = ChatPromptTemplate.from_template(
             """You are a civic data extractor. 
             Analyze the following complaint text and categorize it using one of these labels: {labels}.
+            Determine urgency using this rubric:
+            - high: immediate public safety risk, active hazard, blocked essential service, exposed electrical issue, flooding, fire, collapse, sewage overflow, injury risk, or user explicitly says urgent/immediate.
+            - medium: service disruption or sanitation issue that needs prompt attention but is not an immediate life-safety emergency.
+            - low: minor inconvenience, cosmetic issue, intermittent issue, or routine maintenance with no current danger.
+            Do not default to medium unless the complaint clearly fits the medium definition.
             
             Text: {text}
             

@@ -14,6 +14,54 @@ const normalizeAiCategory = (value) =>
 const normalizePriority = (value) =>
   typeof value === "string" && value.trim() ? value.trim().toLowerCase() : DEFAULT_PRIORITY;
 
+const HIGH_PRIORITY_PATTERNS = [
+  /live wire/i,
+  /electrocut/i,
+  /fire/i,
+  /spark/i,
+  /short circuit/i,
+  /collapsed?/i,
+  /cave[- ]?in/i,
+  /flood/i,
+  /sewage overflow/i,
+  /gas leak/i,
+  /accident/i,
+  /injur/i,
+  /ambulance/i,
+  /emergency/i,
+  /immediately|right now|urgent|asap/i,
+  /danger|hazard|unsafe/i,
+  /people may|get hit|might fall/i,
+];
+
+const LOW_PRIORITY_PATTERNS = [
+  /flicker/i,
+  /dim/i,
+  /minor/i,
+  /small pothole/i,
+  /occasionally/i,
+  /sometimes/i,
+  /when possible/i,
+  /no immediate danger/i,
+  /for information/i,
+];
+
+const inferPriorityFromText = (text) => {
+  if (typeof text !== "string" || !text.trim()) {
+    return null;
+  }
+
+  if (HIGH_PRIORITY_PATTERNS.some((pattern) => pattern.test(text))) {
+    return "high";
+  }
+
+  if (LOW_PRIORITY_PATTERNS.some((pattern) => pattern.test(text))) {
+    return "low";
+  }
+
+  return null;
+};
+
 const normalizeNullableString = (value) => {
   if (typeof value !== "string") {
     return null;
@@ -75,6 +123,13 @@ const classifyComplaintText = async (text, initialCategory, initialPriority) => 
       console.error("Classification failed:", error);
       category = DEFAULT_CATEGORY;
     }
+  }
+
+  const inferredPriority = inferPriorityFromText(text);
+  if (!priority || priority === DEFAULT_PRIORITY) {
+    priority = inferredPriority || priority;
+  } else if (inferredPriority === "high") {
+    priority = "high";
   }
 
   return {

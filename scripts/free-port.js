@@ -58,7 +58,7 @@ const getProcessDetails = (pid) => {
 
 const killPidTree = (pid) => {
   try {
-    run(`taskkill //PID ${pid} //T //F`);
+    run(`taskkill /PID ${pid} /T /F`);
     return true;
   } catch (error) {
     const stderr = error?.stderr?.toString?.() || "";

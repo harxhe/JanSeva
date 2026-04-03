@@ -5,6 +5,7 @@ import ScreenHeader from "../components/ScreenHeader";
 import Card from "../components/Card";
 import InputField from "../components/InputField";
 import PrimaryButton from "../components/PrimaryButton";
+import { apiUrl } from "../config/api";
 
 const buildFallbackPreview = (description) => ({
   category: "general",
@@ -30,7 +31,7 @@ const TextComplaintScreen = ({ onBack, onSubmit }) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-      const res = await fetch("http://10.128.169.206:5000/api/interactions/preview", {
+      const res = await fetch(apiUrl("/api/interactions/preview"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: controller.signal,

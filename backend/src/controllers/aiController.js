@@ -31,17 +31,12 @@ const saveTranscription = async (req, res, next) => {
       .from("ai_outputs")
       .insert({
         complaint_id: complaint.id,
-        transcript_text: transcriptText,
-        transcript_confidence:
-          req.body?.transcript_confidence != null
-            ? Number(req.body.transcript_confidence)
-            : null,
         model_name: isNonEmptyString(req.body?.model_name)
           ? req.body.model_name.trim()
           : "whisper",
       })
       .select(
-        "id, complaint_id, transcript_text, transcript_confidence, classification_label, classification_confidence, model_name, overridden_by_human, created_at"
+        "id, complaint_id, classification_label, model_name, overridden_by_human, created_at"
       )
       .single();
 
@@ -89,16 +84,12 @@ const saveClassification = async (req, res, next) => {
       .insert({
         complaint_id: complaint.id,
         classification_label: classificationLabel,
-        classification_confidence:
-          req.body?.classification_confidence != null
-            ? Number(req.body.classification_confidence)
-            : null,
         model_name: isNonEmptyString(req.body?.model_name)
           ? req.body.model_name.trim()
           : "classifier-v1",
       })
       .select(
-        "id, complaint_id, transcript_text, transcript_confidence, classification_label, classification_confidence, model_name, overridden_by_human, created_at"
+        "id, complaint_id, classification_label, model_name, overridden_by_human, created_at"
       )
       .single();
 
@@ -185,7 +176,7 @@ const overrideClassification = async (req, res, next) => {
         model_name: "manual-override",
       })
       .select(
-        "id, complaint_id, transcript_text, transcript_confidence, classification_label, classification_confidence, model_name, overridden_by_human, created_at"
+        "id, complaint_id, classification_label, model_name, overridden_by_human, created_at"
       )
       .single();
 

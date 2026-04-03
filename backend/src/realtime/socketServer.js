@@ -15,11 +15,6 @@ const persistVoiceTranscript = async (payload) => {
 
   await supabaseAdmin.from("ai_outputs").insert({
     complaint_id: complaintId,
-    transcript_text: transcriptText,
-    transcript_confidence:
-      payload.transcript_confidence != null
-        ? Number(payload.transcript_confidence)
-        : null,
     model_name:
       typeof payload.model_name === "string" && payload.model_name.trim().length > 0
         ? payload.model_name.trim()

@@ -5,6 +5,7 @@ import ScreenHeader from "../components/ScreenHeader";
 import Card from "../components/Card";
 import PrimaryButton from "../components/PrimaryButton";
 import { Audio } from "expo-av";
+import { apiUrl } from "../config/api";
 
 const LANGUAGE_OPTIONS = [
   "English",
@@ -81,7 +82,7 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
       });
       formData.append("language", selectedLanguage);
 
-      const res = await fetch("http://10.128.169.206:5000/api/interactions/voice/transcribe", {
+      const res = await fetch(apiUrl("/api/interactions/voice/transcribe"), {
         method: "POST",
         body: formData,
       });

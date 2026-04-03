@@ -14,6 +14,15 @@ const normalizeAiCategory = (value) =>
 const normalizePriority = (value) =>
   typeof value === "string" && value.trim() ? value.trim().toLowerCase() : DEFAULT_PRIORITY;
 
+const normalizeNullableString = (value) => {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed && trimmed.toLowerCase() !== "null" ? trimmed : null;
+};
+
 const buildComplaintPreview = async (text, initialCategory, initialPriority) => {
   const classification = await classifyComplaintText(text, initialCategory, initialPriority);
   let translatedText = text;
@@ -23,7 +32,7 @@ const buildComplaintPreview = async (text, initialCategory, initialPriority) => 
   try {
     const translation = await aiService.translate(text, "English");
     translatedText = translation.translated_text || text;
-    sourceLanguage = translation.source_language || null;
+    sourceLanguage = normalizeNullableString(translation.source_language);
     translationModelName = translation.model_name || translationModelName;
   } catch (error) {
     console.error("Translation failed:", error);
@@ -81,9 +90,6 @@ const persistAiResult = async (complaint, payload = {}) => {
   const aiOutputPayload = {
     complaint_id: complaint.id,
     classification_label: payload.category,
-    classification_confidence: payload.classificationConfidence,
-    transcript_text: payload.transcriptText || null,
-    transcript_confidence: payload.transcriptConfidence ?? null,
     model_name: payload.modelName || "v0.5-classifier",
   };
 

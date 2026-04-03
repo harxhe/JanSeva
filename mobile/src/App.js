@@ -7,6 +7,7 @@ import TextComplaintScreen from "./screens/TextComplaintScreen";
 import VoiceComplaintScreen from "./screens/VoiceComplaintScreen";
 import HistoryScreen from "./screens/HistoryScreen";
 import SettingsScreen from "./screens/SettingsScreen";
+import { apiUrl } from "./config/api";
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -15,7 +16,7 @@ const App = () => {
 
   useEffect(() => {
     if (user) {
-      fetch("http://10.128.169.206:5000/api/complaints")
+      fetch(apiUrl("/api/complaints"))
         .then(res => res.json())
         .then(data => {
           const list = data.data || [];
@@ -69,7 +70,7 @@ const App = () => {
           formData.append("transcription_model_name", payload.transcriptionModelName);
         }
 
-        res = await fetch("http://10.128.169.206:5000/api/interactions/voice/submit", {
+        res = await fetch(apiUrl("/api/interactions/voice/submit"), {
           method: "POST",
           body: formData,
         });
@@ -85,7 +86,7 @@ const App = () => {
           channel: "app"
         };
 
-        res = await fetch("http://10.128.169.206:5000/api/interactions/chat", {
+        res = await fetch(apiUrl("/api/interactions/chat"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(dbPayload)

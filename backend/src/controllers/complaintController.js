@@ -347,7 +347,7 @@ const getComplaintById = async (req, res, next) => {
       supabaseAdmin
         .from("ai_outputs")
         .select(
-          "id, transcript_text, transcript_confidence, classification_label, classification_confidence, model_name, overridden_by_human, created_at"
+          "id, classification_label, model_name, overridden_by_human, created_at"
         )
         .eq("complaint_id", complaint.id)
         .order("created_at", { ascending: false })

@@ -4,6 +4,7 @@ import { theme } from "../utils/theme";
 import InputField from "../components/InputField";
 import PrimaryButton from "../components/PrimaryButton";
 import Card from "../components/Card";
+import BrandLogo from "../components/BrandLogo";
 
 const SignInScreen = ({ onSuccess }) => {
   const [phone, setPhone] = useState("");
@@ -14,7 +15,7 @@ const SignInScreen = ({ onSuccess }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.brand}>Samadhan</Text>
+      <BrandLogo />
       <Text style={styles.heading}>Start reporting</Text>
       <Text style={styles.subheading}>
         Enter your phone number to link your complaints, or continue as a guest.
@@ -47,12 +48,6 @@ const styles = StyleSheet.create({
     padding: theme.spacing.xl,
     justifyContent: "center",
     backgroundColor: theme.colors.background,
-  },
-  brand: {
-    textTransform: "uppercase",
-    letterSpacing: 4,
-    color: theme.colors.inkMuted,
-    fontSize: 12,
   },
   heading: {
     fontSize: 26,

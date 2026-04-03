@@ -23,6 +23,6 @@ export const mockChat = [
   {
     id: "m1",
     role: "assistant",
-    text: "Hello! I am Samadhan AI. How can I help you today?",
+    text: "Hello! I am JANSEVA AI. How can I help you today?",
   },
 ];

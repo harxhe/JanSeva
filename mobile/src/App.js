@@ -178,9 +178,7 @@ const App = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       {showOnboarding ? (
-        <View style={styles.onboardingWrap}>
-          <OnboardingScreen onFinish={() => setShowOnboarding(false)} />
-        </View>
+        <OnboardingScreen onFinish={() => setShowOnboarding(false)} />
       ) : (
         <ScrollView
           contentContainerStyle={styles.scroll}
@@ -200,11 +198,6 @@ const styles = StyleSheet.create({
   },
   scroll: {
     padding: theme.spacing.xl,
-  },
-  onboardingWrap: {
-    flex: 1,
-    padding: theme.spacing.xl,
-    justifyContent: "center",
   },
   screen: {
     flex: 1,

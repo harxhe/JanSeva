@@ -1,11 +1,13 @@
+import BrandLogo from "./BrandLogo";
+
 const Sidebar = ({ activeId, onChange, navItems}) => {
   return (
     <aside className="flex h-full flex-col gap-6 bg-ink-900/95 p-6 text-white shadow-soft">
       <div>
-        <p className="text-xs uppercase tracking-[0.3em] text-white/60">Samadhan</p>
-        <h1 className="mt-2 text-2xl font-semibold">Civic Command Hub</h1>
+        <BrandLogo light />
+        <h1 className="mt-4 text-2xl font-semibold">Civic Command Hub</h1>
         <p className="mt-2 text-sm text-white/70">
-          Dashboard for Civic Complaints.
+          Live dashboard for JANSEVA civic complaints.
         </p>
       </div>
       <nav className="flex-1 space-y-2">

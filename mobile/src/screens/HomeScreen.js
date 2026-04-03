@@ -3,11 +3,13 @@ import { theme } from "../utils/theme";
 import Card from "../components/Card";
 import ActionTile from "../components/ActionTile";
 import PrimaryButton from "../components/PrimaryButton";
+import BrandLogo from "../components/BrandLogo";
 
 const HomeScreen = ({ user, onNavigate, latestStatus }) => {
   return (
     <View style={styles.container}>
       <View>
+        <BrandLogo compact />
         <Text style={styles.greeting}>Hello {user.name}</Text>
         <Text style={styles.subtitle}>Choose how you want to submit your civic complaint.</Text>
       </View>

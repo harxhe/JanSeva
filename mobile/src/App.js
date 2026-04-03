@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, View, Alert } from "react-native";
 import { theme } from "./utils/theme";
 import HomeScreen from "./screens/HomeScreen";
+import OnboardingScreen from "./screens/OnboardingScreen";
 import TextComplaintScreen from "./screens/TextComplaintScreen";
 import VoiceComplaintScreen from "./screens/VoiceComplaintScreen.js";
 import HistoryScreen from "./screens/HistoryScreen";
@@ -14,6 +15,7 @@ const DEFAULT_USER = {
 
 const App = () => {
   const [user] = useState(DEFAULT_USER);
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const [screen, setScreen] = useState("home");
   const [history, setHistory] = useState([]);
 
@@ -175,12 +177,18 @@ const App = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.screen}>{renderScreen()}</View>
-      </ScrollView>
+      {showOnboarding ? (
+        <View style={styles.onboardingWrap}>
+          <OnboardingScreen onFinish={() => setShowOnboarding(false)} />
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.screen}>{renderScreen()}</View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -192,6 +200,11 @@ const styles = StyleSheet.create({
   },
   scroll: {
     padding: theme.spacing.xl,
+  },
+  onboardingWrap: {
+    flex: 1,
+    padding: theme.spacing.xl,
+    justifyContent: "center",
   },
   screen: {
     flex: 1,

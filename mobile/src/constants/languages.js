@@ -1,0 +1,27 @@
+export const QUICK_LANGUAGE_LABELS = ["English", "Hindi", "Bengali", "Tamil", "Telugu", "Marathi"];
+
+export const INDIAN_LANGUAGE_OPTIONS = [
+  { label: "English", hint: "English", script: "Latin" },
+  { label: "Assamese", hint: "Assamese", script: "Eastern" },
+  { label: "Bengali", hint: "Bengali", script: "Eastern" },
+  { label: "Bodo", hint: "Bodo", script: "Eastern" },
+  { label: "Dogri", hint: "Dogri", script: "Northern" },
+  { label: "Gujarati", hint: "Gujarati", script: "Western" },
+  { label: "Hindi", hint: "Hindi", script: "Northern" },
+  { label: "Kannada", hint: "Kannada", script: "Southern" },
+  { label: "Kashmiri", hint: "Kashmiri", script: "Northern" },
+  { label: "Konkani", hint: "Konkani", script: "Western" },
+  { label: "Maithili", hint: "Maithili", script: "Northern" },
+  { label: "Malayalam", hint: "Malayalam", script: "Southern" },
+  { label: "Manipuri", hint: "Manipuri", script: "Eastern" },
+  { label: "Marathi", hint: "Marathi", script: "Western" },
+  { label: "Nepali", hint: "Nepali", script: "Northern" },
+  { label: "Odia", hint: "Odia", script: "Eastern" },
+  { label: "Punjabi", hint: "Punjabi", script: "Northern" },
+  { label: "Sanskrit", hint: "Sanskrit", script: "Classical" },
+  { label: "Santali", hint: "Santali", script: "Eastern" },
+  { label: "Sindhi", hint: "Sindhi", script: "Northwestern" },
+  { label: "Tamil", hint: "Tamil", script: "Southern" },
+  { label: "Telugu", hint: "Telugu", script: "Southern" },
+  { label: "Urdu", hint: "Urdu", script: "Northern" },
+];

@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, Pressable, Platform } from "react-native";
+import { View, Text, StyleSheet, Pressable, Platform, Modal, ScrollView, TextInput } from "react-native";
 import { theme } from "../utils/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import Card from "../components/Card";
 import PrimaryButton from "../components/PrimaryButton";
 import { Audio } from "expo-av";
 import { apiUrl } from "../config/api";
-
-const LANGUAGE_OPTIONS = ["English", "Hindi", "Bengali", "Tamil", "Telugu", "Marathi"];
+import { INDIAN_LANGUAGE_OPTIONS, QUICK_LANGUAGE_LABELS } from "../constants/languages";
 
 const isWeb = Platform.OS === "web";
 
@@ -24,6 +23,8 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
   const [transcriptConfidence, setTranscriptConfidence] = useState(null);
   const [transcriptionModelName, setTranscriptionModelName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
+  const [languageSearch, setLanguageSearch] = useState("");
 
   const webRecorderRef = useRef(null);
   const webStreamRef = useRef(null);
@@ -42,6 +43,18 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
       }
     };
   }, [recording]);
+
+  const filteredLanguages = INDIAN_LANGUAGE_OPTIONS.filter((language) => {
+    const query = languageSearch.trim().toLowerCase();
+    if (!query) {
+      return true;
+    }
+
+    return (
+      language.label.toLowerCase().includes(query) ||
+      language.script.toLowerCase().includes(query)
+    );
+  });
 
   const resetPreview = () => {
     setTranscript("");
@@ -171,7 +184,11 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
       const upload = isWeb ? await buildWebAudioUpload() : await buildNativeAudioUpload();
 
       const formData = new FormData();
-      formData.append("audio", upload);
+      if (isWeb) {
+        formData.append("audio", upload, upload.name || "complaint.webm");
+      } else {
+        formData.append("audio", upload);
+      }
       formData.append("language", selectedLanguage);
 
       const res = await fetch(apiUrl("/api/interactions/voice/transcribe"), {
@@ -199,7 +216,7 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
       console.error(err);
       setTranscript("");
       setTranslatedText("");
-      setErrorMessage(err.message || "Could not reach the server for transcription. Please try again.");
+      setErrorMessage(err.message || `Could not reach ${apiUrl("/api/interactions/voice/transcribe")}. Please try again.`);
       setStep("confirm");
     }
   };
@@ -223,6 +240,12 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
     resetPreview();
   };
 
+  const selectLanguage = (languageLabel) => {
+    setSelectedLanguage(languageLabel);
+    setIsLanguageModalVisible(false);
+    setLanguageSearch("");
+  };
+
   return (
     <View style={styles.container}>
       <ScreenHeader
@@ -234,8 +257,9 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
         {step === "record" && (
           <View style={styles.centerBox}>
             <Text style={styles.sectionTitle}>Select recording language</Text>
+            <Text style={styles.selectedLanguageLabel}>Selected: {selectedLanguage}</Text>
             <View style={styles.languageGrid}>
-              {LANGUAGE_OPTIONS.map((language) => {
+              {QUICK_LANGUAGE_LABELS.map((language) => {
                 const selected = language === selectedLanguage;
                 return (
                   <Pressable
@@ -247,6 +271,9 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
                   </Pressable>
                 );
               })}
+              <Pressable onPress={() => setIsLanguageModalVisible(true)} style={styles.moreChip}>
+                <Text style={styles.moreChipText}>More languages</Text>
+              </Pressable>
             </View>
             <Text style={styles.statusText}>Ready to record in {selectedLanguage}</Text>
             <PrimaryButton label="Start Recording" onPress={startRecording} />
@@ -294,6 +321,48 @@ const VoiceComplaintScreen = ({ onBack, onSubmit }) => {
           </View>
         )}
       </Card>
+
+      <Modal
+        visible={isLanguageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsLanguageModalVisible(false)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setIsLanguageModalVisible(false)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Choose a language</Text>
+            <Text style={styles.modalSubtitle}>Quick picks stay on the main screen; everything else lives here.</Text>
+            <TextInput
+              value={languageSearch}
+              onChangeText={setLanguageSearch}
+              placeholder="Search language or region"
+              placeholderTextColor={theme.colors.inkMuted}
+              style={styles.searchInput}
+            />
+            <ScrollView style={styles.languageList} showsVerticalScrollIndicator={false}>
+              {filteredLanguages.map((language) => {
+                const selected = selectedLanguage === language.label;
+                return (
+                  <Pressable
+                    key={language.label}
+                    style={[styles.languageRow, selected && styles.languageRowActive]}
+                    onPress={() => selectLanguage(language.label)}
+                  >
+                    <View>
+                      <Text style={[styles.languageRowTitle, selected && styles.languageRowTitleActive]}>
+                        {language.label}
+                      </Text>
+                      <Text style={styles.languageRowMeta}>{language.script}</Text>
+                    </View>
+                    {selected ? <Text style={styles.languageRowCheck}>Selected</Text> : null}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+            <PrimaryButton label="Done" variant="secondary" onPress={() => setIsLanguageModalVisible(false)} />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
@@ -320,6 +389,11 @@ const styles = StyleSheet.create({
     color: theme.colors.ink,
     textAlign: "center",
   },
+  selectedLanguageLabel: {
+    fontSize: 13,
+    color: theme.colors.inkMuted,
+    textAlign: "center",
+  },
   statusText: {
     fontSize: 16,
     color: theme.colors.inkMuted,
@@ -341,6 +415,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
+  },
+  moreChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: theme.colors.accent,
+    backgroundColor: "#f1fcf8",
+  },
+  moreChipText: {
+    color: theme.colors.accent,
+    fontWeight: "700",
   },
   languageChipActive: {
     backgroundColor: theme.colors.primary,
@@ -395,6 +482,77 @@ const styles = StyleSheet.create({
   },
   buttonWrap: {
     flex: 1,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(11, 18, 32, 0.45)",
+    padding: theme.spacing.lg,
+    justifyContent: "center",
+  },
+  modalCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.lg,
+    gap: 12,
+    maxHeight: "80%",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: theme.colors.ink,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: theme.colors.inkMuted,
+    lineHeight: 18,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: theme.colors.ink,
+    backgroundColor: theme.colors.softAlt,
+  },
+  languageList: {
+    maxHeight: 360,
+  },
+  languageRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    marginBottom: 8,
+  },
+  languageRowActive: {
+    backgroundColor: theme.colors.soft,
+    borderColor: theme.colors.primary,
+  },
+  languageRowTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: theme.colors.ink,
+  },
+  languageRowTitleActive: {
+    color: theme.colors.primary,
+  },
+  languageRowMeta: {
+    fontSize: 12,
+    color: theme.colors.inkMuted,
+    marginTop: 2,
+  },
+  languageRowCheck: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: theme.colors.primary,
   },
 });
 

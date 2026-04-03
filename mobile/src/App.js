@@ -4,7 +4,7 @@ import { theme } from "./utils/theme";
 import SignInScreen from "./screens/SignInScreen";
 import HomeScreen from "./screens/HomeScreen";
 import TextComplaintScreen from "./screens/TextComplaintScreen";
-import VoiceComplaintScreen from "./screens/VoiceComplaintScreen";
+import VoiceComplaintScreen from "./screens/VoiceComplaintScreen.js";
 import HistoryScreen from "./screens/HistoryScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import { apiUrl } from "./config/api";
@@ -49,14 +49,16 @@ const App = () => {
 
       if (isVoiceSubmission) {
         const formData = new FormData();
-        formData.append(
-          "audio",
-          payload.audioUpload || {
-            uri: payload.audioUri,
-            name: "complaint.m4a",
-            type: "audio/mp4",
-          }
-        );
+        const audioPayload = payload.audioUpload || {
+          uri: payload.audioUri,
+          name: "complaint.m4a",
+          type: "audio/mp4",
+        };
+        if (typeof window !== "undefined" && payload.audioUpload instanceof File) {
+          formData.append("audio", audioPayload, audioPayload.name || "complaint.webm");
+        } else {
+          formData.append("audio", audioPayload);
+        }
         formData.append("phone_number", user?.phone || "0000000000");
         formData.append("name", user?.name || "Guest");
         formData.append("language", payload.language || "English");

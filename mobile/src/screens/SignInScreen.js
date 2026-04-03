@@ -7,23 +7,17 @@ import Card from "../components/Card";
 
 const SignInScreen = ({ onSuccess }) => {
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
 
-  const handleSendOtp = () => {
-    setOtpSent(true);
-  };
-
-  const handleVerify = () => {
+  const handleContinue = () => {
     onSuccess({ name: "Citizen", phone });
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.brand}>Samadhan</Text>
-      <Text style={styles.heading}>Welcome back</Text>
+      <Text style={styles.heading}>Start reporting</Text>
       <Text style={styles.subheading}>
-        Login with your phone number to raise and track issues.
+        Enter your phone number to link your complaints, or continue as a guest.
       </Text>
       <Card style={styles.card}>
         <InputField
@@ -32,17 +26,10 @@ const SignInScreen = ({ onSuccess }) => {
           onChangeText={setPhone}
           placeholder="+91 98765 43210"
         />
-        {otpSent ? (
-          <InputField
-            label="OTP"
-            value={otp}
-            onChangeText={setOtp}
-            placeholder="Enter 6-digit OTP"
-          />
-        ) : null}
         <PrimaryButton
-          label={otpSent ? "Verify OTP" : "Send OTP"}
-          onPress={otpSent ? handleVerify : handleSendOtp}
+          label="Continue with phone"
+          onPress={handleContinue}
+          disabled={!phone.trim()}
         />
         <PrimaryButton
           label="Continue as guest"

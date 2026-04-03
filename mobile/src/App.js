@@ -6,7 +6,6 @@ import HomeScreen from "./screens/HomeScreen";
 import TextComplaintScreen from "./screens/TextComplaintScreen";
 import VoiceComplaintScreen from "./screens/VoiceComplaintScreen.js";
 import HistoryScreen from "./screens/HistoryScreen";
-import SettingsScreen from "./screens/SettingsScreen";
 import { apiUrl } from "./config/api";
 
 const App = () => {
@@ -169,8 +168,6 @@ const App = () => {
         return <VoiceComplaintScreen onBack={() => setScreen("home")} onSubmit={handleSubmit} />;
       case "history":
         return <HistoryScreen onBack={() => setScreen("home")} history={history} />;
-      case "settings":
-        return <SettingsScreen onBack={() => setScreen("home")} />;
       default:
         return <HomeScreen user={user} onNavigate={setScreen} latestStatus={latestStatus} />;
     }

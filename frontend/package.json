@@ -1,7 +1,7 @@
 {
   "name": "frontend",
   "version": "1.0.0",
-  "description": "Samadhan admin dashboard frontend",
+  "description": "JANSEVA admin dashboard frontend",
   "private": true,
   "scripts": {
     "dev": "vite",

@@ -147,8 +147,3 @@ cd mobile
 npx expo export --platform web
 ```
 
-## About Section Description
-
-Use this short description in the About section:
-
-`JANSEVA is an AI-powered civic complaint platform that helps citizens report issues by text or voice and enables faster review through smart transcription, translation, and categorization.`

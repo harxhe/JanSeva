@@ -3,6 +3,7 @@ import AppLayout from "./layouts/AppLayout";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Complaints from "./pages/Complaints";
+import Assignments from "./pages/Assignments";
 import NotFound from "./pages/NotFound";
 import { currentUser } from "./data/mockData";
 import axios from "axios";
@@ -10,17 +11,19 @@ import axios from "axios";
 const pageMap = {
   dashboard: Dashboard,
   complaints: Complaints,
+  assignments: Assignments,
 };
 
 const navItems = [
   { id: "dashboard", label: "Command Center" },
   { id: "complaints", label: "Complaints" },
+  { id: "assignments", label: "Assignments" },
 ];
 
 const accessRules = {
-  admin: ["dashboard", "complaints"],
-  manager: ["dashboard", "complaints"],
-  responder: ["dashboard", "complaints"],
+  admin: ["dashboard", "complaints", "assignments"],
+  manager: ["dashboard", "complaints", "assignments"],
+  responder: ["dashboard", "complaints", "assignments"],
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;

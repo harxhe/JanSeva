@@ -1,12 +1,6 @@
 import ComplaintList from "../components/ComplaintList";
 
 const Complaints = ({ complaints, onResolveComplaint, resolvingComplaintId }) => {
-  const getEvidenceLabel = (file) => {
-    const type = file?.media_type || file?.type || "file";
-    const size = file?.size || (file?.size_bytes != null ? `${file.size_bytes} bytes` : null);
-    return [type, size].filter(Boolean).join(" · ");
-  };
-
   return (
     <div className="flex flex-col gap-6">
       <div className="card">
@@ -15,44 +9,12 @@ const Complaints = ({ complaints, onResolveComplaint, resolvingComplaintId }) =>
           AI-prioritized cases ready for review and assignment.
         </p>
       </div>
-      <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+      <div className="grid gap-6">
         <ComplaintList
           items={complaints}
           onResolveComplaint={onResolveComplaint}
           resolvingComplaintId={resolvingComplaintId}
         />
-        <div className="card">
-          <h3 className="section-title">Evidence + Complaints</h3>
-          <p className="section-subtitle">
-            Evidence is grouped with each complaint for quick review.
-          </p>
-          <div className="mt-4 space-y-4">
-            {complaints.map((item) => (
-              <div key={item.id} className="rounded-2xl border border-ink-900/10 p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-ink-900">{item.id}</p>
-                  <span className="text-xs text-ink-600">{item.evidence.length} files</span>
-                </div>
-                <p className="mt-2 text-xs text-ink-600">{item.title}</p>
-                <div className="mt-3 space-y-2">
-                  {item.evidence.length === 0 ? (
-                    <p className="text-xs text-ink-600">No evidence attached yet.</p>
-                  ) : (
-                    item.evidence.map((file) => (
-                      <div
-                        key={file.id || file.storage_path}
-                        className="flex items-center justify-between rounded-xl bg-ink-900/5 px-3 py-2 text-xs"
-                      >
-                        <span>{file.title || file.storage_path || "Attached file"}</span>
-                        <span className="text-ink-600">{getEvidenceLabel(file)}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

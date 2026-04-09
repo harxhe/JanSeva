@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const ComplaintList = ({ items = [], onResolveComplaint, resolvingComplaintId }) => {
   const [selected, setSelected] = useState(null);
+  const [activeFilter, setActiveFilter] = useState("unresolved");
+
+  const DAY_MS = 24 * 60 * 60 * 1000;
 
   const handleSelect = (item) => {
     setSelected(item);
@@ -12,6 +15,90 @@ const ComplaintList = ({ items = [], onResolveComplaint, resolvingComplaintId })
   };
 
   const isResolved = (item) => (item.status || "").toLowerCase().includes("resolved");
+  const isNew = (item) => {
+    if (!item?.created_at) return false;
+    const createdAt = new Date(item.created_at);
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfTomorrow = new Date(startOfToday.getTime() + DAY_MS);
+    return createdAt >= startOfToday && createdAt < startOfTomorrow;
+  };
+  const isOverdue = (item) => {
+    if (!item?.created_at || isResolved(item)) return false;
+    return Date.now() - new Date(item.created_at).getTime() > 3 * DAY_MS;
+  };
+
+  const filterButtons = useMemo(() => {
+    const unresolvedCount = items.filter((item) => !isResolved(item)).length;
+    const solvedCount = items.filter((item) => isResolved(item)).length;
+    const newCount = items.filter((item) => isNew(item)).length;
+    const overdueCount = items.filter((item) => isOverdue(item)).length;
+
+    return [
+      { id: "all", label: "View all", count: items.length },
+      { id: "unresolved", label: "Unresolved", count: unresolvedCount },
+      { id: "solved", label: "Solved", count: solvedCount },
+      { id: "new", label: "New", count: newCount },
+      { id: "overdue", label: "Overdue", count: overdueCount },
+    ];
+  }, [items]);
+
+  const filteredItems = useMemo(() => {
+    switch (activeFilter) {
+      case "solved":
+        return items.filter((item) => isResolved(item));
+      case "new":
+        return items.filter((item) => isNew(item));
+      case "overdue":
+        return items.filter((item) => isOverdue(item));
+      case "unresolved":
+        return items.filter((item) => !isResolved(item));
+      case "all":
+      default:
+        return items;
+    }
+  }, [activeFilter, items]);
+
+  useEffect(() => {
+    if (!selected) return;
+    const nextSelected = items.find((item) => item.id === selected.id);
+    if (!nextSelected) {
+      setSelected(null);
+      return;
+    }
+    setSelected(nextSelected);
+  }, [items, selected]);
+
+  const getStatusClasses = (item) => {
+    if (isResolved(item)) {
+      return "bg-jade-400/15 text-jade-700";
+    }
+    if (isOverdue(item)) {
+      return "bg-coral-500/15 text-coral-600";
+    }
+    if (isNew(item)) {
+      return "bg-sun-400/20 text-sun-700";
+    }
+    return "bg-ink-900/8 text-ink-700";
+  };
+
+  const getStateLabels = (item) => {
+    const labels = [];
+    if (isResolved(item)) {
+      labels.push({ text: "Solved", className: "bg-jade-400/15 text-jade-700" });
+    } else {
+      labels.push({ text: "Unresolved", className: "bg-ink-900/8 text-ink-700" });
+    }
+
+    if (isOverdue(item)) {
+      labels.push({ text: "Overdue", className: "bg-coral-500/15 text-coral-600" });
+    } else if (isNew(item)) {
+      labels.push({ text: "New", className: "bg-sun-400/20 text-sun-700" });
+    }
+
+    return labels;
+  };
 
   const handleResolve = async () => {
     if (!selected || !onResolveComplaint || isResolved(selected)) return;
@@ -32,14 +119,30 @@ const ComplaintList = ({ items = [], onResolveComplaint, resolvingComplaintId })
 
   return (
     <div className="card">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <h2 className="section-title">Live Complaints</h2>
-        <button type="button" className="btn btn-outline">
-          View all
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {filterButtons.map((filter) => {
+            const active = filter.id === activeFilter;
+            return (
+              <button
+                key={filter.id}
+                type="button"
+                onClick={() => setActiveFilter(filter.id)}
+                className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
+                  active
+                    ? "border-ink-900 bg-ink-900 text-white"
+                    : "border-ink-900/10 bg-white text-ink-700 hover:border-ink-900/20 hover:bg-ink-50"
+                }`}
+              >
+                {filter.label} <span className="ml-1 opacity-80">{filter.count}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
       <div className="mt-4 space-y-3">
-        {items.map((item) => (
+        {filteredItems.map((item) => (
           <button
             key={item.id}
             type="button"
@@ -62,6 +165,14 @@ const ComplaintList = ({ items = [], onResolveComplaint, resolvingComplaintId })
                   <span className="rounded-full bg-sun-400/15 px-3 py-1 text-[11px] font-semibold text-sun-600 capitalize">
                     Urgency: {item.priority}
                   </span>
+                  {getStateLabels(item).map((label) => (
+                    <span
+                      key={`${item.id}-${label.text}`}
+                      className={`rounded-full px-3 py-1 text-[11px] font-semibold ${label.className}`}
+                    >
+                      {label.text}
+                    </span>
+                  ))}
                 </div>
 
                 <p className="mt-2 line-clamp-2 text-sm text-ink-800">
@@ -72,7 +183,7 @@ const ComplaintList = ({ items = [], onResolveComplaint, resolvingComplaintId })
               <div className="flex flex-col items-end justify-between gap-2 text-[11px] text-ink-600">
                 <div className="flex flex-wrap items-center gap-2">
                   {item.status && (
-                    <span className="rounded-full bg-jade-400/15 px-3 py-1 text-jade-600 capitalize">
+                    <span className={`rounded-full px-3 py-1 capitalize ${getStatusClasses(item)}`}>
                       {item.status}
                     </span>
                   )}
@@ -87,6 +198,11 @@ const ComplaintList = ({ items = [], onResolveComplaint, resolvingComplaintId })
             </div>
           </button>
         ))}
+        {filteredItems.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-ink-900/15 bg-ink-50 px-4 py-8 text-center text-sm text-ink-600">
+            No complaints in this category.
+          </div>
+        ) : null}
       </div>
 
       {selected && (

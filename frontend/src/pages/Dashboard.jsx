@@ -2,7 +2,7 @@ import StatCard from "../components/StatCard";
 import ComplaintList from "../components/ComplaintList";
 import TopBar from "../components/TopBar";
 
-const Dashboard = ({ stats, complaints, role, onRoleChange }) => {
+const Dashboard = ({ stats, complaints, role, onRoleChange, onResolveComplaint, resolvingComplaintId }) => {
   return (
     <div className="flex flex-col gap-6">
       <TopBar role={role} onRoleChange={onRoleChange} />
@@ -12,7 +12,11 @@ const Dashboard = ({ stats, complaints, role, onRoleChange }) => {
         ))}
       </section>
       <section className="grid gap-6">
-        <ComplaintList items={complaints} />
+        <ComplaintList
+          items={complaints}
+          onResolveComplaint={onResolveComplaint}
+          resolvingComplaintId={resolvingComplaintId}
+        />
       </section>
     </div>
   );

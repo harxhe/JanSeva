@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const ComplaintList = ({ items = [] }) => {
+const ComplaintList = ({ items = [], onResolveComplaint, resolvingComplaintId }) => {
   const [selected, setSelected] = useState(null);
 
   const handleSelect = (item) => {
@@ -9,6 +9,16 @@ const ComplaintList = ({ items = [] }) => {
 
   const closeDetail = () => {
     setSelected(null);
+  };
+
+  const isResolved = (item) => (item.status || "").toLowerCase().includes("resolved");
+
+  const handleResolve = async () => {
+    if (!selected || !onResolveComplaint || isResolved(selected)) return;
+    await onResolveComplaint(selected.id);
+    setSelected((current) =>
+      current ? { ...current, status: "resolved", resolved_at: new Date().toISOString() } : current
+    );
   };
 
   const formatDate = (iso) => {
@@ -129,6 +139,19 @@ const ComplaintList = ({ items = [] }) => {
                     <p>Resolved at: {formatDate(selected.resolved_at)}</p>
                   )}
                 </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                {!isResolved(selected) && onResolveComplaint ? (
+                  <button
+                    type="button"
+                    onClick={handleResolve}
+                    disabled={resolvingComplaintId === selected.id}
+                    className="rounded-full bg-ink-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-ink-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {resolvingComplaintId === selected.id ? "Marking resolved..." : "Mark as resolved"}
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>

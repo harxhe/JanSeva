@@ -1,6 +1,6 @@
 import ComplaintList from "../components/ComplaintList";
 
-const Complaints = ({ complaints }) => {
+const Complaints = ({ complaints, onResolveComplaint, resolvingComplaintId }) => {
   const getEvidenceLabel = (file) => {
     const type = file?.media_type || file?.type || "file";
     const size = file?.size || (file?.size_bytes != null ? `${file.size_bytes} bytes` : null);
@@ -16,7 +16,11 @@ const Complaints = ({ complaints }) => {
         </p>
       </div>
       <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-        <ComplaintList items={complaints} />
+        <ComplaintList
+          items={complaints}
+          onResolveComplaint={onResolveComplaint}
+          resolvingComplaintId={resolvingComplaintId}
+        />
         <div className="card">
           <h3 className="section-title">Evidence + Complaints</h3>
           <p className="section-subtitle">

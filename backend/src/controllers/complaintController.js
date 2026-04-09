@@ -19,14 +19,14 @@ const VALID_STATUSES = new Set([
 ]);
 
 const STATUS_TRANSITIONS = {
-  received: new Set(["ai_classified", "pending_triage", "duplicate", "rejected"]),
-  ai_classified: new Set(["pending_triage", "assigned", "duplicate", "rejected"]),
-  pending_triage: new Set(["assigned", "need_more_info", "duplicate", "rejected"]),
-  assigned: new Set(["in_progress", "need_more_info", "escalated"]),
+  received: new Set(["ai_classified", "pending_triage", "resolved", "duplicate", "rejected"]),
+  ai_classified: new Set(["pending_triage", "assigned", "resolved", "duplicate", "rejected"]),
+  pending_triage: new Set(["assigned", "need_more_info", "resolved", "duplicate", "rejected"]),
+  assigned: new Set(["in_progress", "need_more_info", "resolved", "escalated"]),
   in_progress: new Set(["resolved", "escalated", "need_more_info"]),
   resolved: new Set(["verified_closed", "in_progress"]),
   verified_closed: new Set([]),
-  need_more_info: new Set(["pending_triage", "assigned", "rejected"]),
+  need_more_info: new Set(["pending_triage", "assigned", "resolved", "rejected"]),
   duplicate: new Set([]),
   rejected: new Set([]),
   escalated: new Set(["assigned", "in_progress", "resolved"]),

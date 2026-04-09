@@ -12,13 +12,15 @@ const StatCard = ({ label, value, trend, detail, tone }) => {
           <p className="text-sm text-ink-600">{label}</p>
           <p className="mt-2 text-3xl font-semibold text-ink-900">{value}</p>
         </div>
-        <span
-          className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-            toneClasses[tone] || toneClasses.jade
-          }`}
-        >
-          {trend}
-        </span>
+        {trend ? (
+          <span
+            className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+              toneClasses[tone] || toneClasses.jade
+            }`}
+          >
+            {trend}
+          </span>
+        ) : null}
       </div>
       <p className="mt-3 text-xs text-ink-600">{detail}</p>
     </div>

@@ -1,16 +1,3 @@
-<<<<<<< HEAD
-__pycache__/
-*.py[cod]
-*$py.class
-.env
-.venv
-env/
-venv/
-*.log
-*.mp3
-*.wav
-temp/
-=======
 node_modules/
 .DS_Store
 
@@ -27,13 +14,16 @@ __pycache__/
 *$py.class
 .pytest_cache/
 
-# Project Specific
+# Logs and temp files
+*.log
+*.mp3
+*.wav
+temp/
+
+# Project specific
 ai/static/
 ai/temp/
-*.log
 index.html
 verify_transcribe.py
 list_models.py
 check_env.py
-
->>>>>>> 5a93affa36b18604f56261e49a06eedd1d711270
